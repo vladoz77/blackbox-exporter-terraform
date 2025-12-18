@@ -19,6 +19,9 @@ jobs:
         with:
           terraform_version: '1.9.8'
 
+      - name: Debug - List files
+        run: ls -la
+
       - name: Terraform Init with S3 backend
         run: |
           terraform init \
