@@ -119,6 +119,7 @@ jobs:
       - name: Run Ansible Playbook
         run: |
           cd ansible
+          ls -la
           echo "Running Ansible Playbook"
           ansible-playbook -i inventory.ini \
           playbook.yaml \
