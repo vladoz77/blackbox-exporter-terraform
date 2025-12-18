@@ -131,7 +131,6 @@ jobs:
           ansible-playbook -i inventory.ini \
           playbook.yaml \
           -u ubuntu \
-          --python=/usr/bin/python3 \
           --ssh-extra-args "-o StrictHostKeyChecking=no"
 
 
