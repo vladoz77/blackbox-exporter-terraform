@@ -1,0 +1,12 @@
+docker_service_name: docker.service
+
+repo_url: https://download.docker.com/linux/centos/docker-ce.repo
+repo_dest: /etc/yum.repos.d/docker-ce.repo
+
+packages:
+- dnf-plugins-core
+- docker-ce
+- docker-ce-cli
+- containerd.io
+- docker-buildx-plugin
+- docker-compose-plugin

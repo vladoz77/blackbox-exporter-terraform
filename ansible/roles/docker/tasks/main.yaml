@@ -1,0 +1,9 @@
+---
+- name: docker install ubuntu
+  ansible.builtin.include_tasks: ubuntu.yaml
+  when: ansible_facts.os_family == "Debian" 
+
+- name: docker install rhel
+  ansible.builtin.include_tasks: rhel.yaml
+  when: ansible_facts.os_family == "RedHat" 
+    

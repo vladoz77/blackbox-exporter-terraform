@@ -1,0 +1,5 @@
+- name: Config blackbox server
+  hosts: blackbox-server
+  become: yes
+  roles:
+    - common

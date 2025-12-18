@@ -1,0 +1,38 @@
+- name: use var for ubuntu
+  ansible.builtin.include_vars: ubuntu
+
+- name: get service facts
+  ansible.builtin.service_facts:
+
+
+- name: install docker
+  block:
+
+  - name: add gpg key
+    ansible.builtin.apt_key:
+      url: "{{ docker_gpg_key }}"
+      state: present
+
+  - name: add docker repo
+    ansible.builtin.apt_repository:
+      repo: "{{ docker_repo }}"
+      state: present
+
+  - name: install required packages
+    ansible.builtin.apt:
+      name: "{{ packages }}"
+      update_cache: true
+      state: present
+    notify: started_docker
+
+  - name: add user to docker group
+    ansible.builtin.user:
+      user: "{{ ansible_user }}"
+      group: docker
+      append: true
+
+  - name: Create a network
+    docker_network:
+      name: "{{ docker_network_name }}"
+
+  when: docker_service_name not in ansible_facts.services

@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform
+    name: infrastucture deployment
     runs-on: ubuntu-latest
     env:
       TF_ACTION: ${{ github.event.inputs.terraform_action }}
@@ -101,6 +101,27 @@ jobs:
           echo "Запускаем terraform destroy"
           cd terraform
           terraform destroy -auto-approve
+  ansible:
+    name: Configure blackbox server
+    needs: terraform
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: "Install Ansible"
+        uses: alex-oleshkevich/setup-ansible@VERSION 
+        with:
+          version: "9.3.0"
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i ansible/inventory.ini \
+          ansible/playbook.yaml \
+          - u ubuntu \
+          --private-key <(echo "${{ secrets.SSH_PRIV_KEY }}")
 
         
 

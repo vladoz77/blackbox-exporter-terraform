@@ -1,0 +1,11 @@
+# Default hostname name:
+hostname: "srv-{{ ansible_machine_id[0:8] }}"
+
+# Default timezone
+# Get all list timedatectl list-timezones
+timezone: "Europe/Moscow"
+
+# Default packages
+packages:
+  - jq
+  - openjdk-17-jre
