@@ -116,10 +116,14 @@ jobs:
           sudo apt update
           sudo apt install -y ansible sshpass
 
+      - name: debug inventory
+        run: |
+          ls -la
+
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i ansible/inventory.ini \
-          ansible/playbook.yaml \
+          ansible-playbook -i inventory.ini \
+          playbook.yaml \
           - u ubuntu \
           --private-key <(echo "${{ secrets.SSH_PRIV_KEY }}") \
           --ssh-extra-args "-o StrictHostKeyChecking=no"
