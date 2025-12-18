@@ -1,9 +1,7 @@
 name: Terraform CICD
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   terraform:
@@ -54,6 +52,17 @@ jobs:
           TF_VAR_folder_id: ${{ secrets.TF_VAR_FOLDER_ID }}
           TF_VAR_ssh_pub_key: ${{ secrets.SSH_PUB_KEY }}
         run: terraform plan 
+
+      - name: Terraform apply
+        id: apply
+        env: 
+          TF_VAR_iam_token: ${{ secrets.TF_VAR_IAM_TOKEN }}
+          TF_VAR_cloud_id: ${{ secrets.TF_VAR_CLOUD_ID }}
+          TF_VAR_folder_id: ${{ secrets.TF_VAR_FOLDER_ID }}
+          TF_VAR_ssh_pub_key: ${{ secrets.SSH_PUB_KEY }}
+        run: terraform apply  -auto-approve
+
+        
           
          
          
