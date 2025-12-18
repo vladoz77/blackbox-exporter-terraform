@@ -108,8 +108,8 @@ jobs:
         run: |
               attempt=1
               max_attempts=3
-              echo "Запускаем terraform apply"
-              until terraform apply -auto-approve; do
+              echo "Запускаем terraform destroy"
+              until terraform destroy -auto-approve; do
                 if [ $attempt -eq $max_attempts ]; then
                   echo "Достигнут лимит попыток ($max_attempts)"
                   exit 1
