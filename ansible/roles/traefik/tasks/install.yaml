@@ -9,11 +9,11 @@
     name: "{{ packages }}"
     state: present
     update_cache: true
-      
-- name: install python modules
-  ansible.builtin.pip:
-    name: "{{ python_library }}"
-    executable: pip3
+
+# - name: install python modules
+#   ansible.builtin.pip:
+#     name: "{{ python_library }}"
+#     executable: pip3
 
 - name: Get containers using port 80 or 443
   ansible.builtin.command: docker container ls -q --filter publish=80 --filter publish=443
@@ -49,51 +49,51 @@
   when: local_acme.stat.exists
 
 - block:
-    - name: Check if acme.json exists in S3
-      amazon.aws.s3_object_info:
-        bucket_name: "{{ s3_bucket_name }}"
-        object_name: "{{ s3_key }}"
-        access_key: "{{ aws_access_key  }}"
-        secret_key: "{{ aws_secret_key  }}"
-        endpoint_url: "{{ yandex_storage_endpoint  }}"
-        region: "{{ yandex_region }}"
-      register: s3_acme_info
-      failed_when: false
-      ignore_errors: yes
+  - name: Check if acme.json exists in S3
+    amazon.aws.s3_object_info:
+      bucket_name: "{{ s3_bucket_name }}"
+      object_name: "{{ s3_key }}"
+      access_key: "{{ aws_access_key  }}"
+      secret_key: "{{ aws_secret_key  }}"
+      endpoint_url: "{{ yandex_storage_endpoint  }}"
+      region: "{{ yandex_region }}"
+    register: s3_acme_info
+    failed_when: false
+    ignore_errors: yes
 
-    - name: Debug S3 acme status
-      ansible.builtin.debug:
-        msg: "file acme.json does not exist in s3"
-      when: s3_acme_info.object_info is not defined
+  - name: Debug S3 acme status
+    ansible.builtin.debug:
+      msg: "file acme.json does not exist in s3"
+    when: s3_acme_info.object_info is not defined
 
-    - name: Ensure letsencrypt directory exists
-      ansible.builtin.file:
-        path: "{{ traefik_docker_dir }}/letsencrypt"
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-      when: s3_acme_info.object_info is defined
+  - name: Ensure letsencrypt directory exists
+    ansible.builtin.file:
+      path: "{{ traefik_docker_dir }}/letsencrypt"
+      state: directory
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+    when: s3_acme_info.object_info is defined
 
-    - name: Download acme.json from S3 if exists
-      amazon.aws.s3_object:
-        bucket: "{{ s3_bucket_name }}"
-        object: "{{ s3_key }}"
-        dest: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
-        mode: get
-        access_key: "{{ aws_access_key }}"
-        secret_key: "{{ aws_secret_key }}"
-        endpoint_url: "{{ yandex_storage_endpoint }}"
-        region: "{{ yandex_region }}"
-        encrypt: false
-      when: s3_acme_info.object_info is defined
+  - name: Download acme.json from S3 if exists
+    amazon.aws.s3_object:
+      bucket: "{{ s3_bucket_name }}"
+      object: "{{ s3_key }}"
+      dest: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
+      mode: get
+      access_key: "{{ aws_access_key }}"
+      secret_key: "{{ aws_secret_key }}"
+      endpoint_url: "{{ yandex_storage_endpoint }}"
+      region: "{{ yandex_region }}"
+      encrypt: false
+    when: s3_acme_info.object_info is defined
 
-    - name: Set correct permissions on acme.json
-      ansible.builtin.file:
-        path: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
-        mode: '0600'
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-      when: s3_acme_info.object_info is defined
+  - name: Set correct permissions on acme.json
+    ansible.builtin.file:
+      path: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
+      mode: '0600'
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+    when: s3_acme_info.object_info is defined
 
   when: not local_acme.stat.exists
 
