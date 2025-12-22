@@ -20,6 +20,7 @@ services:
     volumes:
     - "{{ victoriametrics_data }}:/storage"
     - "{{ victoriametrics_dir }}/scrape.yaml:{{ scrape_folder }}/scrape.yaml"
+    - "{{ additional_scrape_configs_dir }}:{{ scrape_folder }}/jobs"
     networks:
     - {{ docker_network_name | default('monitoring_network') }}
   {% endif %}

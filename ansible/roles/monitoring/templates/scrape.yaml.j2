@@ -1,6 +1,9 @@
 global:
   scrape_interval: {{ scrape_interval }}
 
+scrape_config_files:
+  - {{ scrape_folder }}/jobs/*.yaml
+
 scrape_configs:
 {% if victoriametrics_enable -%}
 - job_name: {{ victoriametrics_container_name }}
@@ -32,3 +35,4 @@ scrape_configs:
   - targets:
     - {{ loki_container_name }}:{{ loki_port }}/{{ default_metrics_path}}
 {% endif -%}
+

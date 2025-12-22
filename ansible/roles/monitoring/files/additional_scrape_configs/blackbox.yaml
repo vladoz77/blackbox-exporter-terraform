@@ -1,0 +1,20 @@
+- job_name: "blackbox"
+  metrics_path: /probe
+  scheme: https
+  tls_config:
+    insecure_skip_verify: false
+  basic_auth:
+    username: admin
+    password: Password
+  params:
+    module: [ https_endpoint ]
+  static_configs:
+  - targets:
+    - lampa.msk.home-local.site
+  relabel_configs:
+  - source_labels: [ __address__ ]
+    target_label: __param_target
+  - source_labels: [ __param_target ]
+    target_label: instance
+  - target_label: __address__
+    replacement: blackbox.home-local.site

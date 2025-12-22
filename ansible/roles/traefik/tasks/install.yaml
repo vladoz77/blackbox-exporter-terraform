@@ -10,11 +10,6 @@
     state: present
     update_cache: true
 
-# - name: install python modules
-#   ansible.builtin.pip:
-#     name: "{{ python_library }}"
-#     executable: pip3
-
 - name: Get containers using port 80 or 443
   ansible.builtin.command: docker container ls -q --filter publish=80 --filter publish=443
   register: containers_to_remove
