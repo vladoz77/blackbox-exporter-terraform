@@ -126,9 +126,7 @@ jobs:
         path: ansible
 
     - name: Run Ansible Playbook
-      env:
-        ASME_AWS_SECRET: ${{ secrets.ACME_S3_SECRET }}
-        ASME_AWS_ACCESS_KEY: ${{ secrets.ACME_AWS_ACCESS_KEY }}
+      id: ansible
       run: |
         cd ansible
         cat inventory.ini

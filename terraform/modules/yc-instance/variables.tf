@@ -132,3 +132,9 @@ variable "dns_records" {
   default = {}
   description = "dns record config"
 }
+
+variable "wait_timeout" {
+  description = "Timeout in seconds to wait for instance to become available via SSH"
+  type        = number
+  default     = 300
+}

@@ -82,3 +82,32 @@ resource "yandex_dns_recordset" "instance_dns" {
   depends_on = [yandex_compute_instance.instance]
 }
 
+# Wait until instance becomes available via SSH
+resource "null_resource" "wait_for_ssh" {
+  depends_on = [yandex_compute_instance.instance]
+
+  triggers = {
+    instance_ip   = yandex_compute_instance.instance.network_interface[0].nat_ip_address
+    instance_name = yandex_compute_instance.instance.name
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command = <<-EOT
+      echo "Waiting for SSH on ${yandex_compute_instance.instance.name} (${yandex_compute_instance.instance.network_interface[0].nat_ip_address})..."
+      timeout=${var.wait_timeout}
+      while [ $timeout -gt 0 ]; do
+        # Сначала проверяем доступность порта
+        if nc -z -w5 ${yandex_compute_instance.instance.network_interface[0].nat_ip_address} 22 2>/dev/null; then
+          echo "SSH порт на ${yandex_compute_instance.instance.name} доступен"
+          exit 0
+        fi
+        echo -n "."
+        sleep 5
+        timeout=$((timeout - 5))
+      done
+      echo "Timeout ожидания SSH на ${yandex_compute_instance.instance.name} (${yandex_compute_instance.instance.network_interface[0].nat_ip_address})" >&2
+      exit 1
+    EOT
+  }
+}
