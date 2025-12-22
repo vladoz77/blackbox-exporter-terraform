@@ -98,8 +98,8 @@ jobs:
         terraform plan
         terraform destroy -auto-approve
 
-  ansible-monitoring:
-    name: Provision monitoring server
+  ansible-provision:
+    name: Provision monitoring and blackbox server
     needs: terraform
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.terraform_action == 'apply' }}
@@ -132,47 +132,9 @@ jobs:
         cat inventory.ini
         echo "Running Ansible Playbook"
         ansible-playbook -i inventory.ini \
-        monitoring-playbook.yaml \
+        playbook.yaml \
         -e aws_access_key=${{ secrets.ACME_AWS_ACCESS_KEY }} \
         -e aws_secret_key=${{ secrets.ACME_AWS_SECRET }} \
         -u ubuntu \
         --ssh-extra-args "-o StrictHostKeyChecking=no"
   
-  ansible-blackbox:
-    name: Provision blackbox exporter server
-    needs: terraform
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.terraform_action == 'apply' }}
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: "Install Ansible"
-      run: |
-        sudo apt update
-        sudo apt install -y ansible sshpass
-
-    - name: Setup ssh config
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIV_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-
-    - name: Download inventory artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: ansible-inventory
-    
-    - name: Run Ansible Playbook
-      id: ansible-blackbox
-      run: |
-        cd ansible
-        cat inventory.ini
-        echo "Running Ansible Playbook"
-        ansible-playbook -i inventory.ini \
-        blackbox-playbook.yaml \
-        -e aws_access_key=${{ secrets.ACME_AWS_ACCESS_KEY }} \
-        -e aws_secret_key=${{ secrets.ACME_AWS_SECRET }} \
-        -u ubuntu \
-        --ssh-extra-args "-o StrictHostKeyChecking=no"
