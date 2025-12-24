@@ -50,7 +50,7 @@ jobs:
               echo "blackbox-exporter container is already running."
           else
               echo "Running blackbox-exporter container..."
-              docker run -d --name blackbox-exporter \
+              sudo docker run -d --name blackbox-exporter \
                 -p 9115:9115 \
                 -v ~/blackbox-exporter/blackbox.yml:/etc/blackbox_exporter/blackbox.yml \
                 prom/blackbox-exporter --config.file=/etc/blackbox_exporter/blackbox.yml
