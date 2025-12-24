@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install_docker:
+    runs-on: self-hosted
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install docker from script
+        run: |
+          if ! command -v docker &> /dev/null; then
+              echo "Docker is not installed. Installing Docker..."
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sh get-docker.sh
+          else
+              echo "Docker is already installed."
+          fi
+
+      
