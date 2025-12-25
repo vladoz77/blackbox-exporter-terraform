@@ -8,7 +8,7 @@ jobs:
     runs-on: self-hosted
     env:
       ALLOWED_IP: "172.16.10.1"
-      BASE_DIR: "~/blackbox-exporter"
+      BASE_DIR: "/blackbox-exporter"
       CERTS_DIR: "$BASE_DIR/certs"
       IMAGE: "prom/blackbox-exporter"
       CONTAINER_NAME: "blackbox-exporter"
