@@ -87,16 +87,16 @@ jobs:
       - name: Check if blackbox-exporter container is already running delete if exists
         run: |
           echo "Checking if $CONTAINER_NAME container is running..."
-          EXISTING=$(docker ps -a -q -f name="^${CONTAINER_NAME}$")
+          EXISTING=$(sudo docker ps -aq -f name="^${CONTAINER_NAME}$")
           if [ "$EXISTING" ]; then
               echo "$CONTAINER_NAME container is already running, removing it..."
-              docker rm -f "$CONTAINER_NAME"
+              sudo docker rm -f "$CONTAINER_NAME"
           fi
 
       - name: run blackbox exporter container
         run: |
           echo "Running $CONTAINER_NAME container..."
-          docker run -d --name $CONTAINER_NAME \
+          sudo docker run -d --name $CONTAINER_NAME \
             -p $PORT:$PORT \
             -v $BASE_DIR/blackbox.yml:/etc/blackbox_exporter/blackbox.yml \
             -v $BASE_DIR/web-config.yml:/etc/blackbox_exporter/web-config.yml \
