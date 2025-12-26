@@ -1,7 +1,21 @@
-name: CI
+name: Сontinuous Deployment Blackbox Exporter and Prometheus
 
 on:
   workflow_dispatch:
+
+env:
+  BLACKBOX_ALLOWED_IP: "172.16.10.1"
+  BLACKBOX_BASE_DIR: "${{ github.workspace }}/blackbox-exporter"
+  CERTS_DIR: "${{ github.workspace }}/blackbox-exporter/certs"
+  PROMETHEUS_BASE_DIR: "${{ github.workspace }}/prometheus"
+  BLACKBOX_IMAGE: "prom/blackbox-exporter"
+  BLACKBOX_CONTAINER_NAME: "blackbox-exporter"
+  BLACKBOX_VERSION: "latest"
+  BLACKBOX_PORT: "9115"
+  PROMETHEUS_IMAGE: "prom/prometheus"
+  PROMETHEUS_CONTAINER_NAME: "prometheus"
+  PROMETHEUS_VERSION: "latest"
+  PROMETHEUS_PORT: "9090"
 
 jobs:
   deploy_blackbox:
@@ -15,11 +29,6 @@ jobs:
     
     steps:
     
-      - name: Set up paths
-        run: |
-          echo "BASE_DIR=$HOME/blackbox-exporter" >> $GITHUB_ENV
-          echo "CERTS_DIR=$HOME/blackbox-exporter/certs" >> $GITHUB_ENV
-
       - name: Install docker from script
         run: |
           if ! command -v docker &> /dev/null; then
@@ -29,11 +38,18 @@ jobs:
           else
               echo "Docker is already installed."
           fi
+          # Create docker network if not exists
+          if ! sudo docker network ls | grep -q "monitoring_network"; then
+              echo "Creating docker network 'monitoring_network'..."
+              sudo docker network create monitoring_network
+          else
+              echo "Docker network 'monitoring_network' already exists."
+          fi
 
       - name: create blackbox exporter folder
         run: |
-          echo "Creating directory ${BASE_DIR} and ${CERTS_DIR} for blackbox-exporter configuration..."
-          mkdir -p ${BASE_DIR} ${CERTS_DIR}
+          echo "Creating directory ${BLACKBOX_BASE_DIR} and ${CERTS_DIR} for blackbox-exporter configuration..."
+          mkdir -p ${BLACKBOX_BASE_DIR} ${CERTS_DIR}
 
       - name: Create self-signed SSL certificates
         run: |
@@ -52,13 +68,14 @@ jobs:
                 -subj "/C=RU/L=Ryazan/O=Fabrika/OU=IT/CN=blackbox.home.local"
               # Move generated certificates to the certs directory
               mv blackbox.crt blackbox.key ${CERTS_DIR}/
+              chmod 644 ${CERTS_DIR}/*
           fi
 
    
       - name: Create config for blackbox exporter
         run: |
           echo "Creating blackbox-exporter configuration file..."
-          cat > ${BASE_DIR}/blackbox.yml << 'EOF'
+          cat > ${BLACKBOX_BASE_DIR}/blackbox.yml << 'EOF'
           modules:
             https_endpoint:
               prober: http
@@ -83,7 +100,7 @@ jobs:
           sudo apt-get install -y apache2-utils
           BLACKBOX_PASSWORD_HASH=$(printf '%s' "$BLACKBOX_PASSWORD" | htpasswd -nBiC 10 blackbox | cut -d: -f2)
           
-          cat > ${BASE_DIR}/web-config.yml << EOF
+          cat > ${BLACKBOX_BASE_DIR}/web-config.yml << EOF
           tls_server_config:
             cert_file: /certs/blackbox.crt
             key_file: /certs/blackbox.key
@@ -94,23 +111,21 @@ jobs:
 
       - name: Check if blackbox-exporter container is already running delete if exists
         run: |
-          echo "Checking if ${CONTAINER_NAME} container is running..."
-          EXISTING=$(sudo docker ps -aq -f name="^${CONTAINER_NAME}$")
+          echo "Checking if ${BLACKBOX_CONTAINER_NAME} container is running..."
+          EXISTING=$(sudo docker ps -aq -f name="^${BLACKBOX_CONTAINER_NAME}$")
           if [ "$EXISTING" ]; then
-              echo "${CONTAINER_NAME} container is already running, removing it..."
-              sudo docker rm -f "${CONTAINER_NAME}"
+              echo "${BLACKBOX_CONTAINER_NAME} container is already running, removing it..."
+              sudo docker rm -f "${BLACKBOX_CONTAINER_NAME}"
           fi
 
       - name: run blackbox exporter container
         run: |
-          echo "BASE_DIR: ${BASE_DIR}"
-          echo "CERTS_DIR: ${CERTS_DIR}"
-          echo "Running ${CONTAINER_NAME} container..."
-          
-          sudo docker run -d --name ${CONTAINER_NAME} \
+          echo "Running ${BLACKBOX_CONTAINER_NAME} container..."
+
+          sudo docker run -d --name ${BLACKBOX_CONTAINER_NAME} \
             -p ${PORT}:${PORT} \
-            -v "${BASE_DIR}/blackbox.yml:/etc/blackbox_exporter/blackbox.yml" \
-            -v "${BASE_DIR}/web-config.yml:/etc/blackbox_exporter/web-config.yml" \
+            -v "${BLACKBOX_BASE_DIR}/blackbox.yml:/etc/blackbox_exporter/blackbox.yml" \
+            -v "${BLACKBOX_BASE_DIR}/web-config.yml:/etc/blackbox_exporter/web-config.yml" \
             -v "${CERTS_DIR}:/certs" \
             ${IMAGE}:${VERSION} \
             --config.file=/etc/blackbox_exporter/blackbox.yml \
