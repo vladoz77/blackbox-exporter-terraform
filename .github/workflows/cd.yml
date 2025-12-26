@@ -184,7 +184,6 @@ jobs:
   
   deploy_prometheus:
     runs-on: self-hosted
-    needs: deploy_blackbox
     steps:
 
       - name: Create prometheus config dir
