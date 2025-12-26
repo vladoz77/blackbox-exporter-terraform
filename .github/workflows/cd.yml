@@ -36,7 +36,7 @@ jobs:
           # Create docker network if not exists
           if ! sudo docker network ls | grep -q ${DOCKER_NETWORK}; then
               echo "Creating docker network ${DOCKER_NETWORK}..."
-              sudo docker network create $DOCKER_NETWORK
+              docker network create $DOCKER_NETWORK
           else
               echo "Docker network $DOCKER_NETWORK already exists."
           fi
@@ -170,7 +170,7 @@ jobs:
         run: |
           echo "Running ${BLACKBOX_CONTAINER_NAME} container..."
 
-          sudo docker run -d --name ${BLACKBOX_CONTAINER_NAME} \
+          docker run -d --name ${BLACKBOX_CONTAINER_NAME} \
             --network ${DOCKER_NETWORK} \
             --restart unless-stopped \
             -p ${BLACKBOX_PORT}:${BLACKBOX_PORT} \
