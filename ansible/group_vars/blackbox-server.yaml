@@ -1,6 +1,7 @@
 hostname: blackbox
 username: ubuntu
 docker_network_name: blackbox
+docker_version: "5:28.5.2-1"
 packages:
 - jq
 - unzip

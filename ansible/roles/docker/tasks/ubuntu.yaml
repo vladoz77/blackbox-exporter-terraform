@@ -20,19 +20,21 @@
 
   - name: install required packages
     ansible.builtin.apt:
-      name: "{{ packages }}"
+      name: "{{ docker_packages }}"
       update_cache: true
       state: present
       allow_downgrade: yes
     notify: started_docker
 
   - name: Hold docker packages
-    ansible.builtin.dpkg_selections:
-      name: "{{ item }}"
-      selection: hold
+    ansible.builtin.command: apt-mark hold {{ item }}
     loop:
       - docker-ce
       - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    changed_when: false
 
   - name: add user to docker group
     ansible.builtin.user:

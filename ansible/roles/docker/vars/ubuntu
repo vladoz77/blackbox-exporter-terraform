@@ -1,13 +1,3 @@
 # docker repo config
 docker_repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
 docker_gpg_key: https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}/gpg
-
-# Packages
-packages:
-- docker-ce=5:28.5.2-1~ubuntu.24.04~noble
-- docker-ce-cli=5:28.5.2-1~ubuntu.24.04~noble
-- containerd.io
-- docker-buildx-plugin
-- docker-compose-plugin
-
-docker_service_name: docker.service

@@ -11,7 +11,7 @@ blackbox = {
   boot_disk = {
     type     = "network-hdd"
     size     = 20
-    image_id = "fd80293ig2816a78q276"
+    image_id = "fd84r9t01ao2ktahik80"
   }
   tags        = []
   environment = {}
