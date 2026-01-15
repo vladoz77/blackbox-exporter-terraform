@@ -143,7 +143,7 @@ jobs:
       id: ansible-monitoring
       run: |
         cd ansible
-        cat inventory.ini
+        cat inventories/${{env.ENV_NAME}}/inventory.ini
         echo "Running Ansible Playbook"
         ansible-playbook -i inventories/${{env.ENV_NAME}}/inventory.ini playbook.yaml \
         -e aws_access_key=${{ secrets.ACME_AWS_ACCESS_KEY }} \
