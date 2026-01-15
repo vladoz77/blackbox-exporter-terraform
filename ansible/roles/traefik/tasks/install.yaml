@@ -55,6 +55,7 @@
     region: "{{ yandex_region }}"
     access_key: "{{ aws_access_key }}"
     secret_key: "{{ aws_secret_key }}"
+  failed_when: false
   when: s3_acme_info.error is not defined and not local_acme.stat.exists
 
 - name: Create empty ACME file if it does not exist locally and not on S3
