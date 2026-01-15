@@ -12,7 +12,7 @@ traefik_container_name: traefik
 traefik_image: "traefik"
 traefik_version: "v3.5"
 acme_email: "vladoz77@yandex.ru"
-traefik_acme_staging: true
+traefik_acme_staging: false
 
 # blackbox-exporter config
 blackbox_exporter_url: blackbox.home-local.site
