@@ -1,7 +1,12 @@
 ---
+- name: Determine ACME file and S3 key
+  set_fact:
+    acme_local_file: "{{ traefik_acme_file_staging if traefik_acme_staging else traefik_acme_file_prod }}"
+    acme_s3_key: "{{ s3_key_staging if traefik_acme_staging else s3_key_prod }}"
+
 - name: Ensure acme.json exists locally
   ansible.builtin.stat:
-    path: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
+    path: "{{ acme_local_file }}"
   register: local_acme
 
 - name: Fail if acme.json not found locally
@@ -12,8 +17,8 @@
 - name: Upload acme.json to S3 (always overwrite)
   amazon.aws.s3_object:
     bucket: "{{ s3_bucket_name }}"
-    object: "{{ s3_key }}"
-    src: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
+    object: "{{ acme_s3_key }}"
+    src: "{{ acme_local_file }}"
     mode: put
     access_key: "{{ aws_access_key }}"
     secret_key: "{{ aws_secret_key }}"
@@ -25,4 +30,4 @@
 
 - name: Success message
   ansible.builtin.debug:
-    msg: "acme.json successfully synced to s3://{{ s3_bucket_name }}/{{ s3_key }}"
+    msg: "acme.json successfully synced to s3://{{ s3_bucket_name }}/{{ acme_s3_key }}"

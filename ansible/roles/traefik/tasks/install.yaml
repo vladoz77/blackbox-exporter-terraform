@@ -17,76 +17,61 @@
     owner: "{{ ansible_user }}"
     state: directory
 
+- name: Determine ACME file and S3 key
+  set_fact:
+    acme_local_file: "{{ traefik_acme_file_staging if traefik_acme_staging else traefik_acme_file_prod }}"
+    acme_s3_key: "{{ s3_key_staging if traefik_acme_staging else s3_key_prod }}"
+
+- name: Ensure letsencrypt directory exists
+  ansible.builtin.file:
+    path: "{{ traefik_letsencrypt_path }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
 - name: check if acme.json exist
   ansible.builtin.stat:
-    path: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
+    path: "{{ acme_local_file }}"
   register: local_acme
 
-- name: Skip S3 download if local acme exists
-  ansible.builtin.debug:
-    msg: "Local acme.json found, skipping S3 download"
-  when: local_acme.stat.exists
+- name: Check if acme.json exists in S3
+  amazon.aws.s3_object_info:
+    bucket_name: "{{ s3_bucket_name }}"
+    object_name: "{{ acme_s3_key }}"
+    endpoint_url: "{{ yandex_storage_endpoint }}"
+    access_key: "{{ aws_access_key }}"
+    secret_key: "{{ aws_secret_key }}"
+    region: "{{ yandex_region }}"
+  register: s3_acme_info
+  failed_when: false
 
-- block:
-  - name: Check if acme.json exists in S3
-    amazon.aws.s3_object_info:
-      bucket_name: "{{ s3_bucket_name }}"
-      object_name: "{{ s3_key }}"
-      endpoint_url: "{{ yandex_storage_endpoint }}"
-      access_key: "{{ aws_access_key }}"
-      secret_key: "{{ aws_secret_key }}"
-      region: "{{ yandex_region }}"
-    register: s3_acme_info
-    failed_when: false
+- name: Download acme.json from S3 if exists
+  amazon.aws.s3_object:
+    bucket: "{{ s3_bucket_name }}"
+    object: "{{ acme_s3_key }}"
+    dest: "{{ acme_local_file }}"
+    mode: get
+    endpoint_url: "{{ yandex_storage_endpoint }}"
+    region: "{{ yandex_region }}"
+    access_key: "{{ aws_access_key }}"
+    secret_key: "{{ aws_secret_key }}"
+  when: s3_acme_info.error is not defined and not local_acme.stat.exists
 
-  - name: Debug S3 acme status
-    ansible.builtin.debug:
-      msg: "acme.json exists in s3"
-    when: s3_acme_info.object_info | length > 0
-
-  - name: Ensure letsencrypt directory exists
-    ansible.builtin.file:
-      path: "{{ traefik_docker_dir }}/letsencrypt"
-      state: directory
-      owner: "{{ ansible_user }}"
-      group: "{{ ansible_user }}"
-    when: s3_acme_info.object_info | length > 0
-
-  - name: Download acme.json from S3 if exists
-    amazon.aws.s3_object:
-      bucket: "{{ s3_bucket_name }}"
-      object: "{{ s3_key }}"
-      dest: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
-      mode: get
-      endpoint_url: "{{ yandex_storage_endpoint }}"
-      region: "{{ yandex_region }}"
-      access_key: "{{ aws_access_key }}"
-      secret_key: "{{ aws_secret_key }}"
-    when: s3_acme_info.object_info | length > 0
-
-  - name: Set correct permissions on acme.json
-    ansible.builtin.file:
-      path: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
-      mode: '0600'
-      owner: "{{ ansible_user }}"
-      group: "{{ ansible_user }}"
-    when: s3_acme_info.object_info | length > 0
-
-  when: not local_acme.stat.exists
-
-- name: Re-check local acme.json
-  stat:
-    path: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
-  register: acme_after_restore
-
-- name: Create empty acme.json (first run only)
-  file:
-    path: "{{ traefik_docker_dir }}/letsencrypt/acme.json"
+- name: Create empty ACME file if it does not exist locally and not on S3
+  ansible.builtin.file:
+    path: "{{ acme_local_file }}"
     state: touch
     mode: '0600'
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
-  when: not acme_after_restore.stat.exists
+  when: not local_acme.stat.exists and s3_acme_info.error is defined
+
+- name: Set correct permissions on acme.json
+  ansible.builtin.file:
+    path: "{{ acme_local_file }}"
+    mode: '0600'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
 
 - name: Copy template to traefic folder
   ansible.builtin.template:
@@ -99,4 +84,3 @@
   community.docker.docker_compose_v2:
     project_src: "{{ traefik_docker_dir }}"
     state: present
-  

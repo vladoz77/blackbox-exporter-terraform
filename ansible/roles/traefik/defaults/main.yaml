@@ -18,11 +18,14 @@ traefik_dashboard_password_hash: "$$apr1$$CmiVRFjs$$bPQcSgQ.2HcTzM.HVTvAl1"  # a
 traefik_acme_staging: true # true = staging, false = production
 acme_email: "vladoz77@yandex.ru"
 traefik_letsencrypt_path: "{{ traefik_docker_dir }}/letsencrypt"
+traefik_acme_file_staging: "{{ traefik_letsencrypt_path }}/acme-staging.json"
+traefik_acme_file_prod: "{{ traefik_letsencrypt_path }}/acme-prod.json"
 traefik_acme_sync_to_s3: true
 # config bucket
 yandex_region: ru-central1
 yandex_storage_endpoint: https://storage.yandexcloud.net/
 s3_bucket_name: acme-bucket
-s3_key: "{{ ansible_hostname }}/acme.json"
+s3_key_staging: "{{ ansible_hostname }}/acme-staging.json"
+s3_key_prod: "{{ ansible_hostname }}/acme-prod.json"
 aws_access_key: 
 aws_secret_key: 
