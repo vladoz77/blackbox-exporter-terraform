@@ -4,8 +4,8 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
   roles:
-    # - common
-    # - docker
-    # - blackbox-exporter
-    # - monitoring
+    - common
+    - docker
+    - blackbox-exporter
+    - monitoring
     - traefik
