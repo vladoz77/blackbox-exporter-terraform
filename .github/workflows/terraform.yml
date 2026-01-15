@@ -84,7 +84,7 @@ jobs:
         echo "Запускаем terraform apply"
         cd terraform
         terraform plan -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars"
-        terraform apply -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars"" -auto-approve
+        terraform apply -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars" -auto-approve
 
     - name: Upload inventory file as artifact
       uses: actions/upload-artifact@v4
