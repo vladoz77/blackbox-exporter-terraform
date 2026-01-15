@@ -83,8 +83,8 @@ jobs:
       run: |
         echo "Запускаем terraform apply"
         cd terraform
-        terraform plan -var-file="./environment/${ENV_NAME}-terraform.tfvars"
-        terraform apply-var-file="./environment/${ENV_NAME}-terraform.tfvars" -auto-approve
+        terraform plan -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars"
+        terraform apply -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars"" -auto-approve
 
     - name: Upload inventory file as artifact
       uses: actions/upload-artifact@v4
@@ -103,8 +103,8 @@ jobs:
       run: |
         echo "Запускаем terraform destroy"
         cd terraform
-        terraform plan -var-file="./environment/${ENV_NAME}-terraform.tfvars"
-        terraform destroy -var-file="./environment/${ENV_NAME}-terraform.tfvars" -auto-approve
+        terraform plan -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars"
+        terraform destroy -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars" -auto-approve
 
   ansible-provision:
     name: Provision  blackbox server
@@ -141,7 +141,7 @@ jobs:
         cd ansible
         cat inventory.ini
         echo "Running Ansible Playbook"
-        ansible-playbook -i inventories/${ENV_NAME}/inventory.ini playbook.yaml \
+        ansible-playbook -i inventories/${{env.ENV_NAME}}/inventory.ini playbook.yaml \
         -e aws_access_key=${{ secrets.ACME_AWS_ACCESS_KEY }} \
         -e aws_secret_key=${{ secrets.ACME_AWS_SECRET }} \
         -u ubuntu \
