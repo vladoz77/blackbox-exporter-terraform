@@ -1,5 +1,6 @@
 username = "ubuntu"
 zone     = "ru-central1-a"
+environment = "stage"
 
 blackbox = {
   count         = 1
@@ -26,21 +27,6 @@ blackbox = {
       type = "A"
       ttl  = 300
     }
-    "grafana" = {
-      name = "grafana"
-      type = "A"
-      ttl  = 300
-    }
-    "alertmanager" = {
-      name = "alert"
-      type = "A"
-      ttl  = 300
-    }
-    "vmalert" = {
-      name = "vmalert"
-      type = "A"
-      ttl  = 300
-    }  
   }
 }
 

@@ -1,0 +1,21 @@
+hostname: blackbox
+username: ubuntu
+docker_network_name: blackbox
+docker_version: "5:28.5.2-1"
+packages:
+- jq
+- unzip
+
+# traefik config
+traefik_docker_dir: /home/{{ ansible_user }}/traefik
+traefik_container_name: traefik
+traefik_image: "traefik"
+traefik_version: "v3.5"
+acme_email: "vladoz77@yandex.ru"
+traefik_acme_staging: true
+
+# VictoriaMetrics config
+victoriametrics_url: prometheus.home-local.site
+vmalert_enable: false
+alertmanager_enable: false
+grafana_enable: false

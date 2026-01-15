@@ -3,6 +3,13 @@ name: Terraform CICD
 on:
   workflow_dispatch:
     inputs:
+      env:
+        description: Target environment
+        type: choice
+        default: apply
+        options:
+        - stage
+        - prod
       terraform_action:
         description: Choose terraform actions
         type: choice
@@ -19,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_ACTION: ${{ github.event.inputs.terraform_action }}
+      ENV_NAME: ${{ github.event.inputs.env }}
 
     steps:
     - name: Checkout
@@ -75,8 +83,8 @@ jobs:
       run: |
         echo "Запускаем terraform apply"
         cd terraform
-        terraform plan
-        terraform apply -auto-approve
+        terraform plan -var-file="./environment/${ENV_NAME}-terraform.tfvars"
+        terraform apply-var-file="./environment/${ENV_NAME}-terraform.tfvars" -auto-approve
 
     - name: Upload inventory file as artifact
       uses: actions/upload-artifact@v4
@@ -95,14 +103,16 @@ jobs:
       run: |
         echo "Запускаем terraform destroy"
         cd terraform
-        terraform plan
-        terraform destroy -auto-approve
+        terraform plan -var-file="./environment/${ENV_NAME}-terraform.tfvars"
+        terraform destroy -var-file="./environment/${ENV_NAME}-terraform.tfvars" -auto-approve
 
   ansible-provision:
     name: Provision  blackbox server
     needs: terraform
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.terraform_action == 'apply' }}
+    env:
+      ENV_NAME: ${{ github.event.inputs.env }}
 
     steps:
     - name: Checkout
@@ -131,8 +141,7 @@ jobs:
         cd ansible
         cat inventory.ini
         echo "Running Ansible Playbook"
-        ansible-playbook -i inventory.ini \
-        playbook.yaml \
+        ansible-playbook -i inventories/${ENV_NAME}/inventory.ini playbook.yaml \
         -e aws_access_key=${{ secrets.ACME_AWS_ACCESS_KEY }} \
         -e aws_secret_key=${{ secrets.ACME_AWS_SECRET }} \
         -u ubuntu \

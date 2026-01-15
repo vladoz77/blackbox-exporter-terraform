@@ -65,7 +65,7 @@ resource "local_file" "inventory" {
       blackbox   = flatten(module.blackbox[*].public_ips)
     }
   )
-  filename   = "../ansible/inventory.ini"
+  filename   = "../ansible/inventories/${var.environment}/inventory.ini"
   depends_on = [module.blackbox]
 }
 

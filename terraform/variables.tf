@@ -22,6 +22,11 @@ variable "zone" {
   default     = "ru-central1-a"
 }
 
+variable "environment" {
+  type = string
+  description = "environment for deployment"
+}
+
 variable "ssh_pub_key" {
   description = "SSH public key for instance access"
   type        = string
