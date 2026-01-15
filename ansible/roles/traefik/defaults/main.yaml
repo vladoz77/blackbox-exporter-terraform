@@ -15,7 +15,7 @@ traefik_dashboard_url: "traefik.home.local"
 traefik_dashboard_user: "admin"
 traefik_dashboard_password_hash: "$$apr1$$CmiVRFjs$$bPQcSgQ.2HcTzM.HVTvAl1"  # admin:admin
 # Acme config
-traefik_acme_staging: true # true = staging, false = production
+traefik_acme_staging: false # true = staging, false = production
 acme_email: "vladoz77@yandex.ru"
 traefik_letsencrypt_path: "{{ traefik_docker_dir }}/letsencrypt"
 traefik_acme_file_staging: "{{ traefik_letsencrypt_path }}/acme-staging.json"

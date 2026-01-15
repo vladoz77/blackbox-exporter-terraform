@@ -12,17 +12,19 @@ services:
         - "--providers.docker.exposedbydefault=false"
         - "--providers.docker.network={{ docker_network_name }}"
         - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
+        
         # Staging or Production CA server
         {% if traefik_acme_staging -%}
         - "--certificatesresolvers.le.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
-        - "--certificatesresolvers.le.acme.storage={{ traefik_acme_file_staging }}"
+        - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme-staging.json"
+        
         {% else -%}
         - "--certificatesresolvers.le.acme.caServer=https://acme-v02.api.letsencrypt.org/directory"
-        - "--certificatesresolvers.le.acme.storage={{ traefik_acme_file_prod }}"
-        {% endif -%}
+        - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme-prod.json"
+        {% endif %}
+        
         # Let's Encrypt configuration
         - "--certificatesresolvers.le.acme.email={{ acme_email}}"
-        - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
         - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
       labels:
         # Enable self‑routing
