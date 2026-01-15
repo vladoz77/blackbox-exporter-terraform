@@ -90,7 +90,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ansible-inventory
-        path: ansible/inventory.ini
+        path: ansible/inventories/${{env.ENV_NAME}}/inventory.ini
 
     - name: Terraform destroy
       if: env.TF_ACTION == 'destroy'
