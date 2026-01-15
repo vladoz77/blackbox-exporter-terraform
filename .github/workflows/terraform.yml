@@ -133,13 +133,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: ansible-inventory
-        path: ansible
-
-    - name: Check file
-      run: |
-        ls -l 
-        ls -l ansible
-        
+        path: ansible/inventories/${{env.ENV_NAME}}/inventory.ini
 
     - name: Run Ansible Playbook
       id: ansible-monitoring
