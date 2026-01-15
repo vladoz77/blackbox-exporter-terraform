@@ -2,7 +2,7 @@
   metrics_path: /probe
   scheme: https
   tls_config:
-    insecure_skip_verify: false
+    insecure_skip_verify: true
   basic_auth:
     username: admin
     password: Password
