@@ -135,6 +135,12 @@ jobs:
         name: ansible-inventory
         path: ansible
 
+    - name: Check file
+      run: |
+        ls -l 
+        ls -l ansible
+        
+
     - name: Run Ansible Playbook
       id: ansible-monitoring
       run: |
