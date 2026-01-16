@@ -121,7 +121,7 @@ jobs:
     - name: "Install Ansible"
       run: |
         sudo apt update
-        sudo apt install -y ansible sshpass
+        sudo apt install -y ansible sshpass python3-passlib python3-bcrypt
 
     - name: Setup ssh config
       run: |

@@ -1,11 +1,6 @@
 # Default variables for blackbox-exporter role
 docker_network_name: "blackbox"
 
-# additioanl packages
-packages:
-  - python3-passlib
-  - python3-bcrypt
-
 # Blackbox Exporter configuration
 blackbox_exporter_docker_dir: "/home/{{ ansible_user }}/{{ blackbox_exporter_container_name }}"
 blackbox_exporter_repository: "prom/blackbox-exporter"
