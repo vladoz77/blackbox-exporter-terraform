@@ -1,57 +1,39 @@
-# Ansible role: blackbox-exporter 🚀
+# Роль Ansible: blackbox-exporter
 
-## Описание
-**Роль для установки и запуска Prometheus Blackbox Exporter** в Docker через docker-compose. Разворачивает контейнер с конфигурацией из `files/blackbox.yaml` и шаблоном `templates/docker-compose.yaml.j2`.
+Кратко: разворачивает Prometheus Blackbox Exporter в Docker Compose на целевом хосте, интегрируется с Traefik и опционально включает базовую аутентификацию.
 
----
+Ключевые идеи
+- Роль рендерит `docker-compose.yaml` из `templates/docker-compose.yaml.j2` и копирует `files/blackbox.yaml` в рабочую директорию `blackbox_exporter_docker_dir`.
+- Compose-проекты запускаются через `community.docker.docker_compose_v2` и подключаются к внешней Docker-сети (`docker_network_name`).
 
-## Особенности ✅
+Требования
+- Control node: Ansible >= 2.15, коллекция `community.docker`.
+- Managed node: Docker >= 24, Docker Compose v2 (`docker compose`).
+- Должна существовать внешняя docker-сеть, указанная в `docker_network_name`.
 
-- Размещает файлы в каталоге `{{ "" }}{{ blackbox_exporter_docker_dir }}` (по умолчанию `/home/{{ ansible_user }}/{{ blackbox_exporter_container_name }}`).
-- Поддерживает настройку порта, версии образа и политики рестарта.
-- Интеграция с Traefik через метки в docker-compose (готово к TLS и базовой аутентификации).
+Главные переменные (см. `defaults/main.yaml`)
+- `blackbox_exporter_repository` — образ (default: `prom/blackbox-exporter`).
+- `blackbox_exporter_version` — версия образа (default: `0.28.0`).
+- `blackbox_exporter_container_name` — имя контейнера.
+- `blackbox_exporter_port` — порт внутри/снаружи (default: `9115`).
+- `blackbox_exporter_config_path` — путь конфигурации внутри контейнера.
+- `blackbox_exporter_docker_dir` — директория на хосте для файлов compose и config.
+- `blackbox_exporter_url` — Host для Traefik (пример: `blackbox.example.com`).
+- `blackbox_exporter_basic_auth_enabled` — включить Traefik basic auth (false по умолчанию).
 
----
+Traefik и auth
+- Шаблон `templates/docker-compose.yaml.j2` добавляет labels для Traefik: `traefik.http.routers.<name>`, `traefik.http.services.<name>`. Используйте такую же схему при добавлении сервисов.
+- Хеш пароля генерируется в задаче `tasks/install.yaml` через `password_hash(hashtype='bcrypt')`. Когда включаете auth, передавайте `blackbox_exporter_basic_auth_password` (или храните hash в `ansible-vault`).
 
-## Переменные роли (важные) 🔧
+Файлы роли
+- `defaults/main.yaml` — значения по умолчанию.
+- `templates/docker-compose.yaml.j2` — compose-шаблон с Traefik метками.
+- `files/blackbox.yaml` — пример конфигурации blackbox modules.
+- `tasks/main.yaml`, `tasks/install.yaml` — логика проверки, копирования и запуска.
 
-Все значения по умолчанию находятся в `defaults/main.yaml`.
-
-- `blackbox_exporter_repository` (string) — Docker-образ (по умолчанию `prom/blackbox-exporter`).
-- `blackbox_exporter_version` (string) — версия образа (по умолчанию `0.28.0`).
-- `blackbox_exporter_container_name` (string) — имя контейнера (по умолчанию `blackbox_exporter`).
-- `blackbox_exporter_port` (int) — порт контейнера (по умолчанию `9115`).
-- `blackbox_exporter_config_path` (string) — путь внутри контейнера к конфигу (по умолчанию `/etc/blackbox-exporter/blackbox.yaml`).
-- `blackbox_exporter_docker_dir` (string) — директория на хосте, где будет лежать `docker-compose.yaml` и `blackbox.yaml`.
-- `blackbox_exporter_url` (string) — Host для Traefik (например `blackbox.example.com`).
-- `blackbox_exporter_basic_auth_enabled` (bool) — включить базовую аутентификацию через Traefik (по умолчанию `false`).
-- `blackbox_exporter_basic_auth_username` и `blackbox_exporter_basic_auth_password_hash` — параметры для basic auth при включении.
-- `docker_network_name` — имя docker-сети (по умолчанию `blackbox`).
-
-> Все другие значения и комментарии — смотрите в `defaults/main.yaml`.
-
----
-
-## Файлы роли
-
-- `files/blackbox.yaml` — конфигурация Blackbox Exporter (moduled sample).
-- `templates/docker-compose.yaml.j2` — шаблон docker-compose с метками Traefik и опциональной базовой аутентификацией.
-- `tasks/main.yaml`, `tasks/install.yaml` — логика проверки и установки/запуска контейнера.
-
----
-
-## Зависимости ⚠️
-
-- Коллекция Ansible: `community.docker` (для `docker_container_info` и `docker_compose_v2`).
-- На хосте должен быть установлен Docker и Docker Compose v2.
-- Наличие внешней docker-сети `{{ "" }}{{ docker_network_name }}` (включено в шаблон как external).
-
----
-
-## Пример использования (playbook) 📋
-
+Пример использования (playbook)
 ```yaml
-- hosts: blackbox-servers
+- hosts: blackbox-server
   become: true
   roles:
     - role: blackbox-exporter
@@ -59,40 +41,24 @@
         blackbox_exporter_url: "blackbox.example.com"
         blackbox_exporter_basic_auth_enabled: true
         blackbox_exporter_basic_auth_username: "admin"
-        # Пароль храните в зашифрованном виде (ansible-vault) — здесь ожидается bcrypt hash
-        blackbox_exporter_basic_auth_password_hash: "{{ vault_blackbox_password_hash }}"
+        # храните пароль в ansible-vault; роль может сгенерировать bcrypt hash из plain
+        blackbox_exporter_basic_auth_password: "{{ vault_plain_password }}"
 ```
 
-Или переопределить через `group_vars/`.
+Советы по отладке
+- Убедитесь, что в `{{ blackbox_exporter_docker_dir }}` лежат `docker-compose.yaml` и `blackbox.yaml`.
+- На целевой VM можно просмотреть логи:
+```
+docker compose -f /home/ubuntu/blackbox_exporter/docker-compose.yaml ps
+docker compose -f /home/ubuntu/blackbox_exporter/docker-compose.yaml logs -f
+```
 
----
+Безопасность и практики
+- Секреты и пароли храните в `ansible-vault`.
+- При использовании Traefik обязательно проверяйте TLS (certresolver) и не публикуйте контейнерные порты наружу, если маршрутизация идёт через Traefik.
 
-## Как это работает (коротко) 💡
+Где смотреть примеры
+- Посмотрите `ansible/roles/blackbox-exporter/templates/docker-compose.yaml.j2` для примера Traefik labels.
+- Шаблон генерации inventory — `terraform/inventory.tftpl`.
 
-1. Роль проверяет, запущен ли уже контейнер.
-2. Если контейнер не найден/не запущен — создает директорию, копирует `blackbox.yaml` и рендерит `docker-compose.yaml`.
-3. Запускает/перезапускает проект через `community.docker.docker_compose_v2`.
-
----
-
-## Отладка и тестирование 🧪
-
-- Проверьте, что создана папка `{{ "" }}{{ blackbox_exporter_docker_dir }}` и в ней лежат `docker-compose.yaml` и `blackbox.yaml`.
-- Просмотрите логи контейнера: `docker compose -f /path/to/docker-compose.yaml logs -f` (или `docker logs <container>`).
-
----
-
-## Советы по безопасности 🔐
-
-- Храните пароли в `ansible-vault`.
-- При использовании Traefik включайте TLS через certresolver.
-
----
-
-## Лицензия
-
-MIT — используйте по своему усмотрению.
-
----
-
-Если нужно, могу добавить разделы: метрики, примеры конфигурации `blackbox.yaml` для разных модулей или тестовый playbook для Molecule. ✨
+Если нужно — добавлю короткий пример для Molecule или тестовый playbook для локальной отладки.

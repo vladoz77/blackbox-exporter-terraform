@@ -14,7 +14,7 @@ services:
       {%- endif %}
 
     ports:
-    - {{ blackbox_exporter_port }}:{{ blackbox_exporter_port }}
+    - {{ blackbox_exporter_port }}
     command:
     - --config.file={{ blackbox_exporter_config_path }}
     volumes:
