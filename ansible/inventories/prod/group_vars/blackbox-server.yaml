@@ -22,6 +22,7 @@ vmalert_url: vmalert.home-local.site
 
 # Blackbox config
 blackbox_exporter_url: blackbox.home-local.site
+blackbox_tls_enabled: true
 blackbox_exporter_basic_auth_enabled: true
 blackbox_exporter_basic_auth_username: "admin"
-blackbox_exporter_basic_auth_password_hash: "$$apr1$$.1vm3/F2$$MeTtWcdAI49mJPGhhQOHD0" # admin:admin
+blackbox_scrape_config_dir: "{{ additional_scrape_configs_dir }}"

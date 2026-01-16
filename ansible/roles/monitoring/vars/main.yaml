@@ -2,11 +2,9 @@
 docker_compose_dir: "{{ work_dir }}/docker-compose.yaml"
 work_dir: "/home/{{ username }}/monitoring"
 victoriametrics_dir: "{{ work_dir }}/{{ victoriametrics_container_name }}"
-additional_scrape_configs_dir: "{{ victoriametrics_dir }}/jobs"
 vmalert_dir: "{{ work_dir }}/{{ vmalert_container_name }}"
 alertmanager_dir: "{{ work_dir }}/{{ alertmanager_container_name }}"
 grafana_dir: "{{ work_dir }}/{{ grafana_container_name }}"
-default_metrics_path: metrics
 
 
 

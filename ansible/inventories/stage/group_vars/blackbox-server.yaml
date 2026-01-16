@@ -21,6 +21,7 @@ alertmanager_enable: false
 grafana_enable: false
 
 # Blackbox config
-blackbox_exporter_version: "0.28.0"
 blackbox_exporter_url: blackbox.home-local.site
+blackbox_tls_enabled: false
 blackbox_exporter_basic_auth_enabled: false
+blackbox_scrape_config_dir: "{{ additional_scrape_configs_dir }}"

@@ -1,0 +1,27 @@
+- job_name: {{ blackbox_exporter_container_name }}
+  metrics_path: /probe
+  {% if blackbox_tls_enabled -%}
+  scheme: https
+  tls_config:
+    insecure_skip_verify: true
+  {% else %}
+  
+  scheme: http
+  {% endif -%}
+  {% if  blackbox_exporter_basic_auth_enabled -%}
+  basic_auth:
+    username: {{ blackbox_exporter_basic_auth_username }}
+    password: {{ blackbox_exporter_basic_auth_password }}
+  {% endif -%}
+  params:
+    module: [ https_endpoint ]
+  static_configs:
+  - targets:
+    - lampa.msk.home-local.site
+  relabel_configs:
+  - source_labels: [ __address__ ]
+    target_label: __param_target
+  - source_labels: [ __param_target ]
+    target_label: instance
+  - target_label: __address__
+    replacement: {{ blackbox_exporter_url }}

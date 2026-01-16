@@ -1,26 +1,54 @@
+- name: install additional packages
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: true
+
 - name: create folder {{ blackbox_exporter_container_name }}
   ansible.builtin.file:
     path: "{{ blackbox_exporter_docker_dir }}"
-    group: "{{ username }}"
-    owner: "{{ username }}"
+    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user }}"
     state: directory
 
 - name: copy template blackbox exporter config to {{ blackbox_exporter_docker_dir }}
   ansible.builtin.copy:
     src: "files/blackbox.yaml"
     dest: "{{ blackbox_exporter_docker_dir }}/blackbox.yaml"
-    group: "{{ username }}"
-    owner: "{{ username }}"
+    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user }}"
+
+- name: Create password hash for traefic auth
+  ansible.builtin.set_fact:
+    blackbox_exporter_basic_auth_password_hash: "{{ blackbox_exporter_basic_auth_password | password_hash(hashtype='bcrypt') | regex_replace('\\$', '$$')}}"
+  no_log: true
+  changed_when: false
 
 - name: Copy template docker-compose to {{ blackbox_exporter_docker_dir }}
   ansible.builtin.template:
     src: "templates/docker-compose.yaml.j2"
     dest: "{{ blackbox_exporter_docker_dir }}/docker-compose.yaml"
-    group: "{{ username }}"
-    owner: "{{ username }}" 
+    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user }}"
 
 - name: start blackbox exporter
   community.docker.docker_compose_v2:
-    project_src: "{{ blackbox_exporter_docker_dir }}" 
+    project_src: "{{ blackbox_exporter_docker_dir }}"
     recreate: always
     state: present
+
+- name: Ensure scrape config dir exists
+  ansible.builtin.file:
+    path: "{{ blackbox_scrape_config_dir | dirname }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: copy scrape configuration
+  ansible.builtin.template:
+    src: templates/blackbox-scrape-config.yaml.j2
+    dest: "{{ blackbox_scrape_config_dir }}/blackbox.yaml"
+    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user }}"
+  notify: reload victoriametrics

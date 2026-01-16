@@ -5,20 +5,20 @@
     owner: "{{ username }}"
     state: directory
 
+- name: Create additional scrape configs directory
+  ansible.builtin.file:
+    path: "{{ additional_scrape_configs_dir }}"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: '0755'
+
 - name: copy template scrape config to {{ victoriametrics_dir }}
   ansible.builtin.template:
     src: templates/scrape.yaml.j2
     dest: "{{ victoriametrics_dir }}/scrape.yaml"
     owner: "{{ username }}"
     group: "{{ username }}"
-
-- name: Copy additional scrape configs to {{ additional_scrape_configs_dir }}
-  ansible.builtin.copy:
-    src: files/additional_scrape_configs/
-    dest: "{{ additional_scrape_configs_dir }}/"
-    owner: "{{ username }}"
-    group: "{{ username }}"
-    mode: '0644'
 
 - name: Create Victoriametrics docker-compose file
   ansible.builtin.template:

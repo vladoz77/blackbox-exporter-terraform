@@ -1,17 +1,13 @@
-- name: Set username
-  ansible.builtin.set_fact:
-    username: "{{ username | default(ansible_user) }}"
+# - name: check if {{ blackbox_exporter_container_name }} already running
+#   community.docker.docker_container_info:
+#     name: "{{ blackbox_exporter_container_name }}"
+#   register: container_status
+#   ignore_errors: true
 
-- name: check if {{ blackbox_exporter_container_name }} already running
-  community.docker.docker_container_info:
-    name: "{{ blackbox_exporter_container_name }}"
-  register: container_status
-  ignore_errors: true
-
-- ansible.builtin.debug:
-    msg: "{{ blackbox_exporter_container_name }} exist and running"
-  when: container_status.exists and container_status.container.State.Running
+# - ansible.builtin.debug:
+#     msg: "{{ blackbox_exporter_container_name }} exist and running"
+#   when: container_status.exists and container_status.container.State.Running
 
 - name: Install blackbox exporter dependencies
   ansible.builtin.include_tasks: install.yaml
-  when: not container_status.exists or not container_status.container.State.Running
+  # when: not container_status.exists or not container_status.container.State.Running

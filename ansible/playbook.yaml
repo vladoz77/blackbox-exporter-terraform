@@ -6,6 +6,6 @@
   roles:
     - common
     - docker
-    - blackbox-exporter
     - monitoring
+    - blackbox-exporter
     - traefik

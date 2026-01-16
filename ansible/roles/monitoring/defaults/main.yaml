@@ -8,9 +8,11 @@ victoriametrics_container_name: victoriametrics
 victoriametrics_repo: victoriametrics/victoria-metrics
 victoriametrics_port: 8428
 victoriametrics_url: vm.home.local
+default_metrics_path: metrics
 scrape_interval: 10s
 scrape_file: scrape.yaml
 scrape_folder: /etc/prometheus
+additional_scrape_configs_dir: "{{ victoriametrics_dir }}/jobs"
 victoriametrics_data: vmstorage
 victoriametrics_image: "{{ victoriametrics_repo }}:{{ victoriametrics_version }}"
 
