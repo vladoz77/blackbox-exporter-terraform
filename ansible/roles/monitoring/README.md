@@ -1,18 +1,6 @@
-Отлично, ниже — **README.md, приведённый к GitHub-стилю**:
-короче абзацы, якоря, emoji-заголовки, badge-ready, хорошо читается в превью репозитория.
+# Monitoring Stack (VictoriaMetrics + Grafana + Alertmanager)
 
-Можно **копировать 1-в-1**.
-
----
-
-# 📊 Monitoring Stack (VictoriaMetrics + Grafana + Alertmanager)
-
-![ansible](https://img.shields.io/badge/ansible-2.15%2B-blue)
-![docker](https://img.shields.io/badge/docker-24%2B-blue)
-![compose](https://img.shields.io/badge/docker--compose-v2-blue)
-![license](https://img.shields.io/badge/license-MIT-green)
-
-Production-ready **Ansible role** for deploying a complete monitoring stack using:
+**Ansible role** for deploying a complete monitoring stack using:
 
 * **VictoriaMetrics** — time series database
 * **vmalert** — alert evaluation engine

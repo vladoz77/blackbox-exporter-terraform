@@ -1,16 +1,21 @@
+- name: set username variables
+  ansible.builtin.set_fact:
+    username: "{{ username | default(ansible_user)  }}"
+  changed_when: false
+
 - name: create folder {{ blackbox_exporter_container_name }}
   ansible.builtin.file:
     path: "{{ blackbox_exporter_docker_dir }}"
-    group: "{{ ansible_user }}"
-    owner: "{{ ansible_user }}"
+    group: "{{ username | }}"
+    owner: "{{ username }}"
     state: directory
 
 - name: copy template blackbox exporter config to {{ blackbox_exporter_docker_dir }}
   ansible.builtin.copy:
     src: "files/blackbox.yaml"
     dest: "{{ blackbox_exporter_docker_dir }}/blackbox.yaml"
-    group: "{{ ansible_user }}"
-    owner: "{{ ansible_user }}"
+    group: "{{ username }}"
+    owner: "{{ username }}"
 
 - name: Create password hash for traefic auth
   ansible.builtin.set_fact:
@@ -22,8 +27,8 @@
   ansible.builtin.template:
     src: "templates/docker-compose.yaml.j2"
     dest: "{{ blackbox_exporter_docker_dir }}/docker-compose.yaml"
-    group: "{{ ansible_user }}"
-    owner: "{{ ansible_user }}"
+    group: "{{ username }}"
+    owner: "{{ username }}"
 
 - name: start blackbox exporter
   community.docker.docker_compose_v2:
@@ -35,14 +40,14 @@
   ansible.builtin.file:
     path: "{{ blackbox_scrape_config_dir | dirname }}"
     state: directory
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
     mode: '0755'
 
 - name: copy scrape configuration
   ansible.builtin.template:
     src: templates/blackbox-scrape-config.yaml.j2
     dest: "{{ blackbox_scrape_config_dir }}/blackbox.yaml"
-    group: "{{ ansible_user }}"
-    owner: "{{ ansible_user }}"
+    group: "{{ username }}"
+    owner: "{{ username }}"
   notify: reload victoriametrics

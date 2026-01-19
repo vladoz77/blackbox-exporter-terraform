@@ -123,6 +123,12 @@ jobs:
         sudo apt update
         sudo apt install -y ansible sshpass python3-passlib python3-bcrypt
 
+    - name: Install python deps for ansible
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install passlib bcrypt
+
+
     - name: Setup ssh config
       run: |
         mkdir -p ~/.ssh
