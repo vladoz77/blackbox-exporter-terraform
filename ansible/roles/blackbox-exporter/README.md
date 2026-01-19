@@ -61,4 +61,3 @@ docker compose -f /home/ubuntu/blackbox_exporter/docker-compose.yaml logs -f
 - Посмотрите `ansible/roles/blackbox-exporter/templates/docker-compose.yaml.j2` для примера Traefik labels.
 - Шаблон генерации inventory — `terraform/inventory.tftpl`.
 
-Если нужно — добавлю короткий пример для Molecule или тестовый playbook для локальной отладки.

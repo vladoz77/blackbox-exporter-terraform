@@ -6,7 +6,7 @@
 - name: create folder {{ blackbox_exporter_container_name }}
   ansible.builtin.file:
     path: "{{ blackbox_exporter_docker_dir }}"
-    group: "{{ username | }}"
+    group: "{{ username }}"
     owner: "{{ username }}"
     state: directory
 
