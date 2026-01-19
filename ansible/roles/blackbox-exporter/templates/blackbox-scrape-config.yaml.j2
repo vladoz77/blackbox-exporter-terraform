@@ -1,12 +1,13 @@
 - job_name: {{ blackbox_exporter_container_name }}
   metrics_path: /probe
-  {% if blackbox_tls_enabled -%}
   scheme: https
+  {% if blackbox_tls_enabled -%}
   tls_config:
-    insecure_skip_verify: true
+    insecure_skip_verify: false
   {% else %}
   
-  scheme: http
+  tls_config:
+    insecure_skip_verify: true
   {% endif -%}
   {% if  blackbox_exporter_basic_auth_enabled -%}
   basic_auth:
