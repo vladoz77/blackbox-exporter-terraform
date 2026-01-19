@@ -1,94 +1,154 @@
-# blackbox-exporter
+# Blackbox Exporter — Terraform + Ansible
 
-Проект содержит Terraform + Ansible конфигурации для развёртывания виртуальных машин в Yandex Cloud и установки сервисов мониторинга (Traefik, VictoriaMetrics, Grafana, Alertmanager, Loki) и Prometheus Blackbox Exporter в Docker через Docker Compose.
+Подробная документация по инфраструктурному репозиторию для развёртывания Prometheus Blackbox Exporter с помощью Terraform (создание инстансов/сети) и Ansible (конфигурация и запуск в Docker Compose).
 
-## 🔍 Коротко (что делает репозиторий)
-- Terraform (`terraform/`) создаёт инфраструктуру: VPC, подсеть, security groups, VM и DNS.
-- Terraform генерирует `ansible/inventory.ini` (шаблон `terraform/inventory.tftpl`).
-- Ansible (`ansible/`) настраивает ОС, устанавливает Docker, Traefik, Monitoring стек и Blackbox Exporter по ролям (каждая роль рендерит `templates/*.j2` и управляет сервисами через `community.docker.docker_compose_v2`).
-- Traefik хранит `acme.json` и поддерживает синхронизацию с Yandex S3 через роль `sync_acme_to_s3`.
+## Назначение
 
----
+Репозиторий содержит IaC для создания облачной инфраструктуры (виртуальные машины, сеть, security groups) и последующего развёртывания `blackbox-exporter` на этих машинах с помощью Ansible. Цель — обеспечить повторяемое, контролируемое и версионируемое развёртывание для `stage` и `prod` окружений.
 
-## ✅ Требования
-- Terraform >= 1.9.8
-- Ansible (на машине управления)
-- На целевых хостах: Docker + Docker Compose v2
-- Аккаунт в Yandex Cloud и S3-бакет (для acme/бэкапов)
+## Архитектура
 
----
+- Terraform создаёт ресурсы в облаке (модуль `modules/yc-instance` используется как пример для инстансов).
+- Terraform экспортирует адреса/данные инстансов, которые используются для генерации Ansible inventory.
+- Ansible устанавливает Docker, деплоит `docker-compose` и разворачивает `blackbox-exporter` на целевых машинах.
+- Дополнительно есть роли для мониторинга, alertmanager, grafana и т.д.
 
-## Быстрый старт (локально)
-1. Инициализировать Terraform и применить инфраструктуру:
+## Быстрый старт
+
+1) Клонируйте репозиторий и перейдите в каталог проекта:
+
+```bash
+git clone <репозиторий>
+cd blackbox-exporter-terraform
+```
+
+2) Подготовьте `tfvars` для выбранного окружения (пример — `terraform/environment/prod-terraform.tfvars`):
+
+```bash
+cp terraform/environment/prod-terraform.tfvars.example terraform/environment/prod-terraform.tfvars
+# отредактируйте terraform/environment/prod-terraform.tfvars
+```
+
+3) Инициализируйте и примените Terraform:
 
 ```bash
 cd terraform
-terraform init \
-  -backend-config="access_key=<ACCESS_KEY>" \
-  -backend-config="secret_key=<SECRET_KEY>"
-terraform plan -out plan.tfplan
-terraform apply "plan.tfplan"
+terraform init
+terraform plan -var-file=environment/prod-terraform.tfvars
+terraform apply -var-file=environment/prod-terraform.tfvars
 ```
 
-2. После apply Terraform сгенерирует `ansible/inventory.ini`. Скачайте его или используйте вывод `terraform output` для доступа.
+4) После успешного apply получите выходные переменные (`terraform output`) — они могут включать IP-адреса и шаблоны для Ansible inventory.
 
-3. Запуск Ansible (пример):
+5) Запустите Ansible playbook для развёртывания (пример для prod):
 
 ```bash
-cd ansible
-ansible-playbook -i inventory.ini playbook.yaml \
-  -e aws_access_key=<ACME_AWS_ACCESS_KEY> -e aws_secret_key=<ACME_AWS_SECRET> \
-  -u ubuntu --ssh-extra-args "-o StrictHostKeyChecking=no"
+cd ../ansible
+ansible-playbook -i inventories/prod playbook.yaml
 ```
 
----
+## Подготовка окружения (детали)
 
-## Основные файлы и структуры
-- `terraform/` — модули и конфиги для создания VM и сети (см. `terraform/main.tf`, `terraform/modules/yc-instance/`).
-- `terraform/inventory.tftpl` → `ansible/inventory.ini`.
-- `ansible/playbook.yaml` — включает роли: `common`, `docker`, `traefik`, `monitoring`, `blackbox-exporter`, `sync_acme_to_s3`.
-- `ansible/roles/<role>` — каждая роль содержит `defaults/`, `tasks/`, `templates/`, `README.md`.
-- `ansible/group_vars/` — группа переменных для `monitoring-server` и `blackbox-server`.
-- `.github/workflows/terraform.yml` — CI: terraform init/plan/apply + запуск Ansible.
+- Установите Terraform (рекомендованная версия указывается в `terraform/.terraform-version` или в документации модуля).
+- Установите Ansible (рекомендуется >=2.9). Если используете control machine на Linux, установите `pip` и выполните `pip install ansible`.
+- Настройте доступ к облаку (ключи/credentials) согласно провайдеру, который использует Terraform (см. `terraform/main.tf`).
 
----
+## Terraform: советы и переменные
 
-## Проектные соглашения и полезные приёмы
-- Роли должны быть idempotent: используйте `tasks/` для проверки и условных операций (пример: `ansible/roles/traefik/tasks/install.yaml`).
-- Docker Compose шаблоны помещаются в `templates/*.j2` и обычно используют внешнюю сеть `{{ docker_network_name }}` — указывайте `external` если сеть общая.
-- Traefik использует S3 для бэкапа `acme.json` (`s3_bucket_name`, `s3_key`, `aws_access_key`, `aws_secret_key`, `yandex_storage_endpoint`).
-- Пароли/ключи — храните в `ansible-vault` и передавайте в playbook через vars / group_vars.
-- `monitoring` роль устанавливает ansible-галерею коллекций автоматически (см. `ansible/roles/monitoring/tasks/main.yaml`).
+- Файлы конфигурации: `terraform/main.tf`, `terraform/variables.tf`, `terraform/output.tf`, `terraform/network.tf`.
+- Используйте `terraform plan` перед `apply`.
+- Примеры переменных для `prod` и `stage` находятся в `terraform/environment/`.
+- Для генерации инвентаря Ansible используется шаблон `terraform/inventory.tftpl` — проверьте outputs в `terraform/output.tf`.
 
----
+## Ansible: inventory и роли
 
-## Отладка и часто используемые команды
-- Просмотреть сгенерированный inventory:
-  - `cat ansible/inventory.ini`
-- SSH на VM:
-  - `ssh ubuntu@$(terraform output -raw blackbox_external_ip)`
-- Проверить docker-compose и логи на хосте:
-  - `docker compose -f /home/ubuntu/monitoring/docker-compose.yaml ps`
-  - `docker compose -f /home/ubuntu/monitoring/docker-compose.yaml logs -f <service>`
-- Traefik ACME в S3:
-  - Синхронизация реализована в `ansible/roles/sync_acme_to_s3` — проверьте `s3_bucket_name` и `s3_key` в group_vars.
-- Ansible: попробовать playbook локально с `--check` и `--diff` для безопасного теста.
+- Инвентори: `ansible/inventories/prod` и `ansible/inventories/stage`.
+- Главный playbook: `ansible/playbook.yaml`.
+- Основные роли:
+  - `ansible/roles/blackbox-exporter` — установка `blackbox-exporter` через Docker Compose.
+  - `ansible/roles/monitoring` — конфигурации для Prometheus/Grafana/Alertmanager.
+  - `ansible/roles/traefik` — (если используется) развёртывание Traefik.
+- Переменные ролей находятся в `defaults/main.yaml` внутри каждой роли.
 
----
+Запуск с конкретным inventory и лимитом хостов:
 
-## CI и секреты
-- Workflow `.github/workflows/terraform.yml` использует `yc-iam-token-fed` для получения IAM token и выполняет terraform/ansible.
-- Ожидаемые секреты: `ACCESS_KEY`, `SECRET_KEY`, `TF_VAR_CLOUD_ID`, `TF_VAR_FOLDER_ID`, `YC_SA_ID`, `ACME_AWS_ACCESS_KEY`, `ACME_AWS_SECRET`.
+```bash
+ansible-playbook -i inventories/prod playbook.yaml --limit blackbox-servers
+```
 
----
+## Настройка `blackbox-exporter`
 
-## Как добавить новую роль (чеклист)
-1. Создать `ansible/roles/<your-service>` с `defaults/`, `templates/`, `tasks/`, `README.md`.
-2. Добавить переменные по умолчанию в `defaults/main.yaml`.
-3. Рендерить `templates/docker-compose.yaml.j2` и запускать через `community.docker.docker_compose_v2`.
-4. Обновить `ansible/playbook.yaml` и `ansible/group_vars` (при необходимости).
-5. Документировать в `ansible/roles/<your-service>/README.md` и добавить пример использования.
+- Шаблон конфигурации для `blackbox-exporter` — `ansible/roles/blackbox-exporter/files/blackbox.yaml`.
+- Шаблон docker-compose: `ansible/roles/blackbox-exporter/templates/docker-compose.yaml.j2`.
+- Переменные роли (например, порты, пути данных, версии образов) — `ansible/roles/blackbox-exporter/defaults/main.yaml`.
 
----
+Пример проверки на целевой машине:
 
+```bash
+# на целевой машине
+docker-compose -f /opt/blackbox/docker-compose.yml up -d
+docker-compose -f /opt/blackbox/docker-compose.yml logs -f
+```
+
+## Интеграция с Prometheus
+
+- Шаблон scrape конфигурации: `ansible/roles/blackbox-exporter/templates/blackbox-scrape-config.yaml.j2`.
+- Дополнительные scrape-конфиги находятся в `ansible/roles/monitoring/files/additional_scrape_configs/blackbox.yaml`.
+- Добавьте сгенерированный `blackbox` scrape в основной `prometheus.yml` вашего Prometheus.
+
+## Отладка и проверка
+
+- Проверка доступности экспорта метрик (на локальной машине или в Prometheus server):
+
+```bash
+curl -s http://<blackbox_host>:9115/metrics | head -n 50
+```
+
+- Если контейнер не запускается: проверьте `docker-compose logs` и `docker ps -a`.
+- Для проверки Ansible: используйте `--check` и `--diff`.
+
+## Безопасность
+
+- Никогда не храните секреты в открытом виде в репозитории.
+- Используйте `ansible-vault` или секреты облачного провайдера для ключей/паролей.
+- Ограничьте сетевой доступ к `blackbox-exporter` и к метрикам Prometheus через firewall/security-groups.
+
+## Варианты кастомизации
+
+- Измените шаблоны в `ansible/roles/blackbox-exporter/templates` для настройки Compose/путей.
+- Добавьте дополнительные чекеры/модули в `blackbox.yaml`.
+- Расширьте Terraform-модуль `modules/yc-instance` для дополнительных NIC/дисков.
+
+## FAQ и полезные команды
+
+- Синтаксис Ansible playbook:
+
+```bash
+ansible-playbook --syntax-check -i inventories/prod playbook.yaml
+```
+
+- Dry-run (проверка без изменений):
+
+```bash
+ansible-playbook -i inventories/prod playbook.yaml --check
+```
+
+- Просмотр Terraform state/outputs:
+
+```bash
+terraform show
+terraform output
+```
+
+## Структура репозитория (подробно)
+
+- `ansible/`
+  - `playbook.yaml` — основной playbook
+  - `inventories/` — inventory для `prod` и `stage`
+  - `roles/` — роли Ansible:
+    - `blackbox-exporter/` — role для blackbox
+    - `monitoring/` — роли для prometheus/grafana/alertmanager
+    - `traefik/` — роль для traefik (опционально)
+- `terraform/` — terraform конфигурация и модули
+  - `modules/yc-instance/` — пример модуля для инстансов
 

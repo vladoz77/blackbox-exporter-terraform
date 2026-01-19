@@ -22,6 +22,7 @@
     blackbox_exporter_basic_auth_password_hash: "{{ blackbox_exporter_basic_auth_password | password_hash(hashtype='bcrypt') | regex_replace('\\$', '$$')}}"
   no_log: true
   changed_when: false
+  when: blackbox_exporter_basic_auth_enabled
 
 - name: Copy template docker-compose to {{ blackbox_exporter_docker_dir }}
   ansible.builtin.template:
