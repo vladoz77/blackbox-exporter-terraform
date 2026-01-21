@@ -1,0 +1,4 @@
+[monitoring-blackbox-server]
+%{ for ip in monitoring-blackbox ~}
+${ip} 
+%{ endfor ~}

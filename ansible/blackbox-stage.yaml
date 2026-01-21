@@ -1,5 +1,5 @@
 - name: Config blackbox server
-  hosts: blackbox-server
+  hosts: monitoring-blackbox-server
   become: yes
   vars:
     ansible_python_interpreter: /usr/bin/python3

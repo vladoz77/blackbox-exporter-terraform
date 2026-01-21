@@ -2,10 +2,11 @@ username = "ubuntu"
 zone     = "ru-central1-a"
 environment = "stage"
 
-blackbox = {
+
+monitoring-blackbox = {
   count         = 1
   platform_id   = "standard-v1"
-  instance_name = "blackbox"
+  instance_name = "monitoring-blackbox"
   cpu           = 2
   core_fraction = 20
   memory        = 2
@@ -17,16 +18,16 @@ blackbox = {
   tags        = []
   environment = {}
   dns_records = {
-    "blackbox-exporter" = {
-      name = "blackbox"
-      type = "A"
-      ttl  = 300
-    }
     "prometheus" = {
       name = "prometheus"
       type = "A"
       ttl  = 300
     }
+    "blackbox-exporter" = {
+      name = "blackbox"
+      type = "A"
+      ttl  = 300
+    }  
   }
 }
 

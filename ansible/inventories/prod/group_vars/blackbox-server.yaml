@@ -14,15 +14,10 @@ traefik_version: "v3.5"
 acme_email: "vladoz77@yandex.ru"
 traefik_acme_staging: false
 
-# VictoriaMetrics config
-victoriametrics_url: prometheus.home-local.site
-grafana_url: grafana.home-local.site
-alertmanager_url: alert.home-local.site
-vmalert_url: vmalert.home-local.site
-
 # Blackbox config
 blackbox_exporter_url: blackbox.home-local.site
 blackbox_tls_enabled: true
 blackbox_exporter_basic_auth_enabled: true
 blackbox_exporter_basic_auth_username: "admin"
-blackbox_scrape_config_dir: "{{ additional_scrape_configs_dir }}"
+blackbox_scrape_config_dir: "/home/{{ansible_user}}/monitoring/victoriametrics/jobs"
+monitoring_server_groups: monitoring-server

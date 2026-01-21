@@ -23,7 +23,7 @@ variable "zone" {
 }
 
 variable "environment" {
-  type = string
+  type        = string
   description = "environment for deployment"
 }
 
@@ -78,6 +78,45 @@ variable "blackbox" {
   }
 }
 
+variable "monitoring" {
+  description = "monitoring vm config"
+  type = object({
+    count         = number
+    platform_id   = string
+    instance_name = string
+    cpu           = number
+    core_fraction = number
+    memory        = number
+    boot_disk = object({
+      type     = string
+      size     = number
+      image_id = string
+    })
+    tags        = optional(list(string))
+    environment = optional(map(string))
+    dns_records = map(object({
+      name = string
+      ttl  = number
+      type = string
+    }))
+  })
+  default = {
+    count         = 1
+    platform_id   = "standard-v1"
+    instance_name = "monitoring-server"
+    cpu           = 1
+    core_fraction = 20
+    memory        = 2
+    tags          = []
+    environment   = {}
+    boot_disk = {
+      type     = "network-hdd"
+      size     = 20
+      image_id = "fd81hgrcv6lsnkremf32"
+    }
+    dns_records = {}
+  }
+}
 
 variable "network" {
   description = "Network configuration"

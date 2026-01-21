@@ -1,5 +1,5 @@
-username = "ubuntu"
-zone     = "ru-central1-a"
+username    = "ubuntu"
+zone        = "ru-central1-a"
 environment = "prod"
 
 blackbox = {
@@ -22,6 +22,24 @@ blackbox = {
       type = "A"
       ttl  = 300
     }
+  }
+}
+
+monitoring = {
+  count         = 1
+  platform_id   = "standard-v1"
+  instance_name = "monitoring"
+  cpu           = 2
+  core_fraction = 20
+  memory        = 4
+  boot_disk = {
+    type     = "network-hdd"
+    size     = 20
+    image_id = "fd84r9t01ao2ktahik80"
+  }
+  tags        = []
+  environment = {}
+  dns_records = {
     "prometheus" = {
       name = "prometheus"
       type = "A"
@@ -41,7 +59,7 @@ blackbox = {
       name = "vmalert"
       type = "A"
       ttl  = 300
-    }  
+    }
   }
 }
 

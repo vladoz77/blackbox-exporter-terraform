@@ -1,6 +1,6 @@
 resource "yandex_vpc_security_group" "ssh-access" {
   name        = "ssh-access"
-  network_id  = yandex_vpc_network.network.id
+  network_id  = module.network.network_id
   description = "Ingress rules for SSH access"
 
   ingress {
@@ -19,7 +19,7 @@ resource "yandex_vpc_security_group" "ssh-access" {
 
 resource "yandex_vpc_security_group" "blackbox-exporter-access" {
   name        = "blackbox-exporter-access"
-  network_id  = yandex_vpc_network.network.id
+  network_id  = module.network.network_id
   description = "Ingress rules for accses to blackbox-exporter port"
 
   ingress {
@@ -32,7 +32,7 @@ resource "yandex_vpc_security_group" "blackbox-exporter-access" {
 
 resource "yandex_vpc_security_group" "asme-access" {
   name        = "asme-access"
-  network_id  = yandex_vpc_network.network.id
+  network_id  = module.network.network_id
   description = "Ingress rules for Traefik (HTTP/HTTPS and ACME challenge)"
 
   ingress {

@@ -1,5 +1,5 @@
 # Default variables for blackbox-exporter role
-docker_network_name: "blackbox"
+docker_network_name: ""
 
 # Blackbox Exporter configuration
 blackbox_exporter_docker_dir: "/home/{{ ansible_user }}/{{ blackbox_exporter_container_name }}"
@@ -15,3 +15,4 @@ blackbox_exporter_basic_auth_enabled: false
 blackbox_scrape_config_dir: ""
 blackbox_exporter_basic_auth_username: "admin"
 blackbox_exporter_basic_auth_password: "admin"
+monitoring_server_groups: ""

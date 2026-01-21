@@ -50,6 +50,7 @@ jobs:
              exclude = ["registry.terraform.io/*/*"]
           }
         }
+        EOF
 
     - name: Generate IAM token
       id: get-iam-token
@@ -59,14 +60,21 @@ jobs:
 
     - name: Terraform Format Check
       id: fmt
-      run: terraform fmt -check
-      continue-on-error: true
+      run: |
+        cd terraform/environment/${{ env.ENV_NAME }}
+        terraform fmt -check
+
+    - name: Terraform validate check
+      id: validate
+      run: |
+        cd terraform/environment/${{ env.ENV_NAME }}
+        terraform validate
 
     - name: Terraform Init with S3 backend
       id: init
       run: |
         echo "Запускаем terraform init"
-        cd terraform
+        cd terraform/environment/${{ env.ENV_NAME }}
         terraform init \
           -backend-config="access_key=${{ secrets.ACCESS_KEY }}" \
           -backend-config="secret_key=${{ secrets.SECRET_KEY }}" \
@@ -82,9 +90,9 @@ jobs:
         TF_VAR_ssh_pub_key: ${{ secrets.SSH_PUB_KEY }}
       run: |
         echo "Запускаем terraform apply"
-        cd terraform
-        terraform plan -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars"
-        terraform apply -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars" -auto-approve
+        cd terraform/environment/${{ env.ENV_NAME }}
+        terraform plan 
+        terraform apply -auto-approve
 
     - name: Upload inventory file as artifact
       uses: actions/upload-artifact@v4
@@ -102,9 +110,9 @@ jobs:
         TF_VAR_ssh_pub_key: ${{ secrets.SSH_PUB_KEY }}
       run: |
         echo "Запускаем terraform destroy"
-        cd terraform
-        terraform plan -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars"
-        terraform destroy -var-file="./environment/${{env.ENV_NAME}}-terraform.tfvars" -auto-approve
+        cd terraform/environment/${{ env.ENV_NAME }}
+        terraform plan 
+        terraform destroy -auto-approve
 
   ansible-provision:
     name: Provision  blackbox server
@@ -151,7 +159,7 @@ jobs:
         cd ansible
         cat inventories/${{env.ENV_NAME}}/inventory.ini
         echo "Running Ansible Playbook"
-        ansible-playbook -i inventories/${{env.ENV_NAME}}/inventory.ini playbook.yaml \
+        ansible-playbook -i inventories/${{env.ENV_NAME}}/inventory.ini blackbox-${{env.ENV_NAME}}.yaml \
         -e aws_access_key=${{ secrets.ACME_AWS_ACCESS_KEY }} \
         -e aws_secret_key=${{ secrets.ACME_AWS_SECRET }} \
         -u ubuntu \

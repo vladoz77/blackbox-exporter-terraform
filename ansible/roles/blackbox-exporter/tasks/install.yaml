@@ -37,18 +37,11 @@
     recreate: always
     state: present
 
-- name: Ensure scrape config dir exists
-  ansible.builtin.file:
-    path: "{{ blackbox_scrape_config_dir | dirname }}"
-    state: directory
-    owner: "{{ username }}"
-    group: "{{ username }}"
-    mode: '0755'
-
 - name: copy scrape configuration
   ansible.builtin.template:
     src: templates/blackbox-scrape-config.yaml.j2
     dest: "{{ blackbox_scrape_config_dir }}/blackbox.yaml"
     group: "{{ username }}"
     owner: "{{ username }}"
+  delegate_to: "{{ groups[monitoring_server_groups][0] }}"
   notify: reload victoriametrics

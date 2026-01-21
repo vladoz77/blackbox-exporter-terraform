@@ -1,0 +1,27 @@
+- name: Config all server
+  hosts: all
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  roles:
+  - common
+  - docker
+
+- name: Config monitoring server
+  hosts: monitoring-server
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  roles:
+  - monitoring
+  - traefik
+
+- name: Config blackbox server
+  hosts: blackbox-server
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    victoriametrics_url: prometheus.home-local.site
+  roles:
+  - blackbox-exporter
+  - traefik

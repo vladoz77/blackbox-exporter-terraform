@@ -1,8 +1,9 @@
 - name: reload victoriametrics
   ansible.builtin.uri:
-    url: http://localhost:{{ victoriametrics_port }}/-/reload
+    url: https://{{ victoriametrics_url }}/-/reload
     method: POST
+    validate_certs: false
   register: reload_result
-  retries: 5
-  delay: 3
+  retries: 10
+  delay: 5
   until: reload_result.status == 200

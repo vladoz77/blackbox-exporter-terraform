@@ -14,10 +14,13 @@
     msg: "acme.json not found at {{ traefik_docker_dir }}/letsencrypt/acme.json — nothing to sync!"
   when: not local_acme.stat.exists
 
-- name: Fail if ACME file is empty
-  ansible.builtin.fail:
-    msg: "ACME file at {{ acme_local_file }} is empty — not syncing to S3!"
-  when: local_acme.stat.size == 0
+- name: Wait until ACME file is non-empty
+  ansible.builtin.stat:
+    path: "{{ acme_local_file }}"
+  register: acme_stat
+  until: acme_stat.stat.size | int > 0
+  retries: 10
+  delay: 3
 
 - name: Upload acme.json to S3 (always overwrite)
   amazon.aws.s3_object:
