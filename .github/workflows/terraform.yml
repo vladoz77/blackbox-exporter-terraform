@@ -58,6 +58,16 @@ jobs:
       with:
         yc-sa-id: ${{ secrets.YC_SA_ID }}
 
+    - name: Terraform Init with S3 backend
+      id: init
+      run: |
+        echo "Запускаем terraform init"
+        cd terraform/environment/${{ env.ENV_NAME }}
+        terraform init \
+          -backend-config="access_key=${{ secrets.ACCESS_KEY }}" \
+          -backend-config="secret_key=${{ secrets.SECRET_KEY }}" \
+          -reconfigure
+
     - name: Terraform Format Check
       id: fmt
       run: |
@@ -69,16 +79,6 @@ jobs:
       run: |
         cd terraform/environment/${{ env.ENV_NAME }}
         terraform validate
-
-    - name: Terraform Init with S3 backend
-      id: init
-      run: |
-        echo "Запускаем terraform init"
-        cd terraform/environment/${{ env.ENV_NAME }}
-        terraform init \
-          -backend-config="access_key=${{ secrets.ACCESS_KEY }}" \
-          -backend-config="secret_key=${{ secrets.SECRET_KEY }}" \
-          -reconfigure
 
     - name: Terraform apply
       if: env.TF_ACTION == 'apply'
