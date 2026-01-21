@@ -68,7 +68,7 @@ jobs:
           -backend-config="secret_key=${{ secrets.SECRET_KEY }}" \
           -reconfigure
 
-    - name: Terraform Format Check
+    - name: Terraform format check
       id: fmt
       run: |
         cd terraform/environment/${{ env.ENV_NAME }}
@@ -152,6 +152,11 @@ jobs:
     - name: List directory
       run: |
         ls -la ansible/inventories/${{env.ENV_NAME}}
+
+    - name: Check ansible playbook
+      run: |
+        cd ansible
+        ansible-playbook -i inventories/${{env.ENV_NAME}}/inventory.ini blackbox-${{env.ENV_NAME}}.yaml --syntax-check
 
     - name: Run Ansible Playbook
       id: ansible-monitoring
