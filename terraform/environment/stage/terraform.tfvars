@@ -1,5 +1,5 @@
-username = "ubuntu"
-zone     = "ru-central1-a"
+username    = "ubuntu"
+zone        = "ru-central1-a"
 environment = "stage"
 
 
@@ -27,7 +27,7 @@ monitoring-blackbox = {
       name = "blackbox"
       type = "A"
       ttl  = 300
-    }  
+    }
   }
 }
 

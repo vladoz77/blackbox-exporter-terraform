@@ -33,10 +33,10 @@ provider "yandex" {
 module "network" {
   source = "../../modules/yc-network"
 
-  zone = var.zone
+  zone         = var.zone
   network_name = var.network.name
-  subnet_name = var.network.subnet_name
-  ipv4_cidr = [var.network.cidr]
+  subnet_name  = var.network.subnet_name
+  ipv4_cidr    = [var.network.cidr]
 
 }
 
@@ -53,8 +53,8 @@ module "monitoring-blackbox" {
   boot_disk   = var.monitoring-blackbox.boot_disk
   network_interfaces = [
     {
-      subnet_id = module.network.subnet_id
-      nat       = true
+      subnet_id      = module.network.subnet_id
+      nat            = true
       security_group = []
     }
   ]

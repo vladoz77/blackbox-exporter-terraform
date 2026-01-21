@@ -23,7 +23,7 @@ variable "zone" {
 }
 
 variable "environment" {
-  type = string
+  type        = string
   description = "environment for deployment"
 }
 
