@@ -1,8 +1,0 @@
-[blackbox-server]
-%{ for ip in blackbox ~}
-${ip} 
-%{ endfor ~}
-[monitoring-server]
-%{ for ip in monitoring ~}
-${ip} 
-%{ endfor ~}
