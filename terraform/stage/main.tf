@@ -31,7 +31,7 @@ provider "yandex" {
 }
 
 module "network" {
-  source = "../../modules/yc-network"
+  source = "git::https://github.com/vladoz77/terraform-modules.git//yc-network?ref=main"
 
   zone         = var.zone
   network_name = var.network.name
@@ -41,9 +41,10 @@ module "network" {
 }
 
 module "monitoring-blackbox" {
-  source = "../../modules/yc-instance"
+  source = "git::https://github.com/vladoz77/terraform-modules.git//yc-instance?ref=main"
 
   count       = var.monitoring-blackbox.count
+  folder_id   = var.folder_id
   name        = "monitoring-blackbox-${count.index + 1}"
   zone        = var.zone
   platform_id = var.monitoring-blackbox.platform_id
@@ -59,32 +60,19 @@ module "monitoring-blackbox" {
     }
   ]
   create_dns_record = true
-  dns_zone_id       = data.yandex_dns_zone.zone.id
+  dns_zone_name     = "home-local-zone"
   dns_records       = var.monitoring-blackbox.dns_records
 }
 
 
-resource "local_file" "inventory" {
-  content = templatefile("./inventory.tftpl",
-    {
-      monitoring-blackbox = flatten(module.monitoring-blackbox[*].public_ips)
-    }
-  )
-  filename   = "../../../ansible/inventories/${var.environment}/inventory.ini"
+module "ansible-inventory" {
+  source = "git::https://github.com/vladoz77/terraform-modules.git//ansible-inventory?ref=main"
+
+  environment  = var.environment
+  ansible_path = "../../../ansible/inventories"
+  groups = {
+    blackbox-server   = flatten(module.monitoring-blackbox[*].public_ips)
+  }
+
   depends_on = [module.monitoring-blackbox]
-}
-
-output "monitoring-blackbox_public_ip" {
-  value = try(module.monitoring-blackbox[*].public_ips, [])
-}
-
-output "monitoring-blackbox_fqdn" {
-  description = "Full FQDN of instances managed by mointoring module"
-  value = flatten([
-    for instance in module.monitoring-blackbox : [
-      for name in instance.fqdn : [
-        "${name}.${data.yandex_dns_zone.zone.zone}"
-      ]
-    ]
-  ])
 }
