@@ -121,10 +121,10 @@ jobs:
         name: ansible-inventory
         path: ansible/inventories/${{env.ENV_NAME}}
 
-    - name: Read inventories
-      run: |
-        cat ansible/inventories/${{env.ENV_NAME}}/inventory.ini
     
+    - name: Install passlib for password_hash filter
+      run: |
+        python3 -m pip install --user passlib        
 
     - name:  run playbook
       uses: dawidd6/action-ansible-playbook@v6
