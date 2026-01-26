@@ -62,6 +62,10 @@ jobs:
           tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
           tg_command: 'hcl fmt --check --diff'
 
+    - name: Look directory
+      run: |
+        ls -la
+
     - name: Plan
       uses: gruntwork-io/terragrunt-action@v3
       with:
