@@ -57,16 +57,12 @@ jobs:
     - name: Check terragrunt HCL
       uses: gruntwork-io/terragrunt-action@v3
       with:
-          tg_version: '0.98.0'
-          tf_path: /home/runner/.tfenv/bin/terraform
           tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
           tg_command: 'hcl fmt --check --diff'
 
     - name: Init
       uses: gruntwork-io/terragrunt-action@v3
       with:
-          tg_version: '0.98.0'
-          tf_path: /home/runner/.tfenv/bin/terraform
           tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
           tg_command: 'run --all init'
   
