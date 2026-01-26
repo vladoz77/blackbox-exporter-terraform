@@ -120,6 +120,11 @@ jobs:
       with:
         name: ansible-inventory
         path: ansible/inventories/${{env.ENV_NAME}}
+    
+    - name:  Install passlib
+      run: |
+        sudo apt update
+        sudo apt install python3-passlib
 
     
     - name:  run playbook
