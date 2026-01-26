@@ -121,14 +121,19 @@ jobs:
         name: ansible-inventory
         path: ansible/inventories/${{env.ENV_NAME}}
     
-    - name:  Install passlib
+    - name: Show ansible python interpreter
       run: |
-        sudo apt update
-        sudo apt install python3-passlib
+        which ansible-playbook
+        ansible-playbook --version
+        python3 -c "import sys; print(sys.executable)"   # покажет, какой python используется
 
-    - name: check passlib
+    - name: Force install passlib in ansible env
       run: |
-        python3 -c "import passlib; print('passlib OK:', passlib.__version__)"
+        pipx inject ansible passlib || true
+
+    - name: Final check from ansible's python
+      run: |
+        ~/.local/pipx/venvs/ansible/bin/python -c "import passlib; print('passlib OK from ansible venv:', passlib.__version__)" || echo "Still not found"
 
     
     - name:  run playbook
