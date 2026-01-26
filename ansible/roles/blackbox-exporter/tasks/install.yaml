@@ -19,10 +19,7 @@
     owner: "{{ username }}"
 
 - name: Create password hash for traefic auth
-  ansible.builtin.set_fact:
-    blackbox_exporter_basic_auth_password_hash: "{{ blackbox_exporter_basic_auth_password | password_hash(hashtype='bcrypt') | regex_replace('\\$', '$$')}}"
-  no_log: true
-  changed_when: false
+  ansible.builtin.include_tasks: generate-password-hash.yaml
   when: blackbox_exporter_basic_auth_enabled
 
 - name: Copy template docker-compose to {{ blackbox_exporter_docker_dir }}

@@ -19,5 +19,6 @@ blackbox_exporter_url: blackbox.home-local.site
 blackbox_tls_enabled: true
 blackbox_exporter_basic_auth_enabled: true
 blackbox_exporter_basic_auth_username: "admin"
+blackbox_exporter_basic_auth_password: "admin"
 blackbox_scrape_config_dir: "/home/{{ansible_user}}/monitoring/victoriametrics/jobs"
 monitoring_server_groups: monitoring-server
