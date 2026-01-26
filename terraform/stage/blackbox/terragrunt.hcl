@@ -25,8 +25,8 @@ inputs = {
   memory        = 2
   os_name       = "ubuntu-2404-lts"
   boot_disk = {
-    type     = "network-hdd"
-    size     = 20
+    type = "network-hdd"
+    size = 20
   }
   network_interfaces = [
     {
@@ -35,12 +35,12 @@ inputs = {
       security_group = []
     }
   ]
-  tags        = []
-  environment = {}
+  tags              = []
+  environment       = {}
   create_dns_record = true
-  dns_zone_name = "home-local-zone"
+  dns_zone_name     = "home-local-zone"
   dns_records = {
-   "blackbox" = {
+    "blackbox" = {
       name = "blackbox"
       type = "A"
       ttl  = 300

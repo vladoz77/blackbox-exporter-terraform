@@ -22,8 +22,8 @@ inputs = {
   core_fraction = 20
   memory        = 2
   boot_disk = {
-    type     = "network-hdd"
-    size     = 20
+    type = "network-hdd"
+    size = 20
   }
   network_interfaces = [
     {
@@ -35,7 +35,7 @@ inputs = {
   tags        = []
   environment = {}
   dns_records = {
-   "blackbox" = {
+    "blackbox" = {
       name = "blackbox"
       type = "A"
       ttl  = 300

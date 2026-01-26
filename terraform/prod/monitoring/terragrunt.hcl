@@ -1,18 +1,18 @@
 # prod/instance/terragrunt.hcl
-include "prod"{
+include "prod" {
   path = find_in_parent_folders("root.hcl")
 }
 
 terraform {
-    source = "git::https://github.com/vladoz77/terraform-modules.git//yc-instance?ref=main"
+  source = "git::https://github.com/vladoz77/terraform-modules.git//yc-instance?ref=main"
 }
 
 dependency "vpc" {
-    config_path = "../vpc"
+  config_path = "../vpc"
 
-    mock_outputs = {
-        subnet_id = "mock-vpc-subnet_id"
-    }
+  mock_outputs = {
+    subnet_id = "mock-vpc-subnet_id"
+  }
 }
 
 
@@ -23,8 +23,8 @@ inputs = {
   core_fraction = 20
   memory        = 2
   boot_disk = {
-    type     = "network-hdd"
-    size     = 20
+    type = "network-hdd"
+    size = 20
   }
   network_interfaces = [
     {

@@ -2,10 +2,10 @@
 remote_state {
   backend = "s3"
   config = {
-    endpoint =  "https://storage.yandexcloud.net"
+    endpoint                    = "https://storage.yandexcloud.net"
     bucket                      = "vladis-terraform-state"
     region                      = "${local.folder_id}"
-    key                         = "instances/${path_relative_to_include()}/blackbox.tfstate"  
+    key                         = "instances/${path_relative_to_include()}/blackbox.tfstate"
     skip_region_validation      = true
     skip_credentials_validation = true
     skip_requesting_account_id  = true
