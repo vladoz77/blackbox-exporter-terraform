@@ -158,6 +158,10 @@ jobs:
         cd ansible
         ansible-playbook -i inventories/${{env.ENV_NAME}}/inventory.ini blackbox-${{env.ENV_NAME}}.yaml --syntax-check
 
+    - name: Install passlib for password_hash filter
+      run: |
+        python3 -m pip install --user passlib
+
     - name: Run Ansible Playbook
       id: ansible-monitoring
       run: |
