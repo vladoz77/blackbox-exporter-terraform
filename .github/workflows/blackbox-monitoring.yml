@@ -62,6 +62,9 @@ jobs:
 
     - name: Init
       uses: gruntwork-io/terragrunt-action@v3
+      env:
+        AWS_ACCESS_KEY_ID:     ${{ secrets.ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
       with:
           tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
           tg_command: 'run --all init'
