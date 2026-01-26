@@ -19,6 +19,6 @@ inputs = {
   environment  = local.environment
   ansible_path = "${get_repo_root()}/ansible/inventories"
   groups = {
-    blackbox-server = dependency.blackbox.outputs.public_ips
+    monitoring-blackbox-server = dependency.blackbox.outputs.public_ips
   }
 }

@@ -104,7 +104,7 @@ jobs:
           tg_command: 'run --all destroy --non-interactive'
 
   ansible-provision:
-    name: Provision  blackbox server
+    name: provision server
     needs: deploy_servers
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.terraform_action == 'apply' }}
