@@ -4,7 +4,7 @@ remote_state {
   config = {
     endpoint                    = "https://storage.yandexcloud.net"
     bucket                      = "vladis-terraform-state"
-    region                      = "${local.folder_id}"
+    region                      = "${local.zone}"
     key                         = "instances/${path_relative_to_include()}/blackbox.tfstate"
     skip_region_validation      = true
     skip_credentials_validation = true
