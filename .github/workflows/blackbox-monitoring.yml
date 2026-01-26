@@ -68,5 +68,5 @@ jobs:
           tg_version: '0.98.0'
           tf_path: /home/runner/.tfenv/bin/terraform
           tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
-          tg_command: 'run --all init --terragrunt-non-interactive'
+          tg_command: 'run --all init'
   
