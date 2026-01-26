@@ -126,6 +126,10 @@ jobs:
         sudo apt update
         sudo apt install python3-passlib
 
+    - name: check passlib
+      run: |
+        python3 -c "import passlib; print('passlib OK:', passlib.__version__)"
+
     
     - name:  run playbook
       uses: dawidd6/action-ansible-playbook@v6
