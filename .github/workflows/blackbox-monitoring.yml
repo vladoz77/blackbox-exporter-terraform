@@ -124,7 +124,7 @@ jobs:
     
     - name: Install passlib for password_hash filter
       run: |
-        python3 -m pip install --user passlib        
+        sudo python3 -m pip install passlib      
 
     - name:  run playbook
       uses: dawidd6/action-ansible-playbook@v6
