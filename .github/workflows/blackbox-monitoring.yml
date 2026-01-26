@@ -122,10 +122,6 @@ jobs:
         path: ansible/inventories/${{env.ENV_NAME}}
 
     
-    - name: Install passlib for password_hash filter
-      run: |
-        sudo python3 -m pip install passlib      
-
     - name:  run playbook
       uses: dawidd6/action-ansible-playbook@v6
       with:

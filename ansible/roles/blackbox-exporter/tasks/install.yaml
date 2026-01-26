@@ -1,8 +1,15 @@
 # tasks/install.yaml
-- name: set username variables
+- name: Set username variables
   ansible.builtin.set_fact:
     username: "{{ username | default(ansible_user)  }}"
   changed_when: false
+
+- name: Install python3-passlib
+  ansible.builtin.apt:
+    name:
+      - python3-passlib
+    state: present
+    update_cache: true
 
 - name: create folder {{ blackbox_exporter_container_name }}
   ansible.builtin.file:
@@ -11,7 +18,7 @@
     owner: "{{ username }}"
     state: directory
 
-- name: copy template blackbox exporter config to {{ blackbox_exporter_docker_dir }}
+- name: Copy template blackbox exporter config to {{ blackbox_exporter_docker_dir }}
   ansible.builtin.copy:
     src: "files/blackbox.yaml"
     dest: "{{ blackbox_exporter_docker_dir }}/blackbox.yaml"
@@ -32,13 +39,13 @@
     group: "{{ username }}"
     owner: "{{ username }}"
 
-- name: start blackbox exporter
+- name: Start blackbox exporter
   community.docker.docker_compose_v2:
     project_src: "{{ blackbox_exporter_docker_dir }}"
     recreate: always
     state: present
 
-- name: copy scrape configuration
+- name: Copy scrape configuration
   ansible.builtin.template:
     src: templates/blackbox-scrape-config.yaml.j2
     dest: "{{ blackbox_scrape_config_dir }}/blackbox.yaml"
