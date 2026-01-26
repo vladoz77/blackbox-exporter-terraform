@@ -1,4 +1,4 @@
-
+# tasks/main.yaml
 - name: install {{ victoriametrics_container_name }}
   ansible.builtin.include_tasks: victoriametrics.yaml
   when: victoriametrics_enable | default(true) | bool

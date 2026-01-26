@@ -1,4 +1,4 @@
-# prod/blackbox/terragrunt.hcl
+# stage/blackbox/terragrunt.hcl
 include "root" {
   path = find_in_parent_folders("root.hcl")
 }

@@ -1,3 +1,4 @@
+# tasks/grafana.yaml
 - name: create project {{ grafana_container_name }}
   ansible.builtin.file:
     path: "{{ grafana_dir }}"
@@ -24,21 +25,21 @@
     src: templates/dashboards.yaml.j2
     dest: "{{ grafana_dir }}/dashboards.yaml"
     owner: "{{ username }}"
-    group: "{{ username }}"  
+    group: "{{ username }}"
 
 - name: copy template datasources.yaml  to {{ grafana_dir }}
   ansible.builtin.template:
     src: templates/datasources.yaml.j2
     dest: "{{ grafana_dir }}/datasources.yaml"
     owner: "{{ username }}"
-    group: "{{ username }}"   
+    group: "{{ username }}"
 
 - name: Create Grafana docker-compose file
   ansible.builtin.template:
     src: templates/grafana_compose.yaml.j2
     dest: "{{ grafana_dir }}/docker-compose.yaml"
-    owner: "{{ username }}" 
+    owner: "{{ username }}"
 
 - name: Start Grafana container
   community.docker.docker_compose_v2:
-    project_src: "{{ grafana_dir }}"    
+    project_src: "{{ grafana_dir }}"

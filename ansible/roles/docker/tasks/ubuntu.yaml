@@ -1,3 +1,4 @@
+# tasks/ubuntu.yaml
 - name: use var for ubuntu
   ansible.builtin.include_vars: ubuntu
 
@@ -29,11 +30,11 @@
   - name: Hold docker packages
     ansible.builtin.command: apt-mark hold {{ item }}
     loop:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
-      - docker-buildx-plugin
-      - docker-compose-plugin
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin
     changed_when: false
 
   - name: add user to docker group

@@ -1,3 +1,4 @@
+# files/blackbox.yaml
 modules:
   https_endpoint:
     prober: http

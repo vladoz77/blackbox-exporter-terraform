@@ -1,3 +1,4 @@
+# tasks/main.yaml
 - name: check if {{ traefik_container_name }} already running
   community.docker.docker_container_info:
     name: "{{ traefik_container_name }}"

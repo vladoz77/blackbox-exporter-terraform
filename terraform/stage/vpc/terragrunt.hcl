@@ -1,4 +1,4 @@
-# prod/vpc/terragrunt.hcl
+# stage/vpc/terragrunt.hcl
 include  "root" {
   path = find_in_parent_folders("root.hcl")
 }

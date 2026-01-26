@@ -1,3 +1,4 @@
+# vars/rhel.yaml
 docker_service_name: docker.service
 
 repo_url: https://download.docker.com/linux/centos/docker-ce.repo
