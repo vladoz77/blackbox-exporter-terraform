@@ -68,4 +68,16 @@ jobs:
       with:
           tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
           tg_command: 'run --all init'
+
+    - name: Apply
+      if: env.TF_ACTION == 'apply'
+      uses: gruntwork-io/terragrunt-action@v3
+      env:
+        TF_VAR_iam_token: ${{ steps.get-iam-token.outputs.token }}
+        TF_VAR_cloud_id: ${{ secrets.TF_VAR_CLOUD_ID }}
+        TF_VAR_folder_id: ${{ secrets.TF_VAR_FOLDER_ID }}
+        TF_VAR_ssh_pub_key: ${{ secrets.SSH_PUB_KEY }}
+      with:
+          tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
+          tg_command: 'run --all apply --non-interactive'
   
