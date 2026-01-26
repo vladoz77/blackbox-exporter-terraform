@@ -20,6 +20,7 @@ on:
 permissions:
   id-token: write
 
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -39,3 +40,20 @@ jobs:
           tf_path: /home/runner/.tfenv/bin/terraform
           tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
           tg_command: 'hcl fmt --check --diff'
+  
+  plan:
+    runs-on: ubuntu-latest
+    needs: [ check ]
+    env:
+      WORKING_DIR: "terraform"
+      TF_ACTION: ${{ github.event.inputs.terraform_action }}
+      ENV_NAME: ${{ github.event.inputs.env }}
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+
+      - name: Plan
+        uses: gruntwork-io/terragrunt-action@v3
+        with:
+          tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
+          tg_command: 'plan'
