@@ -1,4 +1,4 @@
----
+# tasks/sync.yaml
 - name: Determine ACME file and S3 key
   set_fact:
     acme_local_file: "{{ traefik_acme_file_staging if traefik_acme_staging else traefik_acme_file_prod }}"

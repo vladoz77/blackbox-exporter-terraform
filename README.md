@@ -1,84 +1,199 @@
+# Infrastructure as Code: Terraform + Ansible
 
-# Blackbox Exporter — Terraform + Ansible
+Этот репозиторий содержит полный цикл управления инфраструктурой и сервисами:
 
-Инфраструктурный репозиторий для развёртывания Prometheus Blackbox Exporter:
-- Terraform — provisioning (инстансы, сеть, security groups).
-- Ansible — конфигурация ОС и развёртывание сервисов (Docker Compose).
+* **Terraform + Terragrunt** — создание инфраструктуры (VPC, VM, inventory)
+* **Ansible** — конфигурация серверов и запуск сервисов
+* Поддержка **stage / prod** окружений
+* Мониторинг, Blackbox Exporter, Traefik, Docker
 
-## Краткий Quick-start
+Проект следует принципам **Infrastructure as Code** и **Immutable-ish infrastructure**:
 
-1. Клонируйте репозиторий:
+* Terraform отвечает за *что создать*
+* Ansible — *как это настроить*
 
-```bash
-git clone <repo> && cd blackbox-exporter-terraform
+## Общая архитектура
+
+```text
+Terraform (Terragrunt)
+        ↓
+  VM / Network / Inventory
+        ↓
+     Ansible
+        ↓
+ Docker / Monitoring / Traefik / Blackbox
+```
+## Структура репозитория
+
+```text
+.
+├── terraform/          # Инфраструктура (Terragrunt)
+├── ansible/            # Конфигурация и сервисы
+└── README.md           # Этот файл
 ```
 
-2. Terraform (пример prod):
+## Окружения
 
-Рекомендуется запускать Terraform из каталога окружения `terraform/environment/<env>`.
+Поддерживаются отдельные окружения:
 
-```bash
-# перейти в каталог окружения
-cd terraform/environment/prod
+* `stage` — тестовое / sandbox
+* `prod` — production
 
-# инициализация
-terraform init
+Разделение реализовано **и в Terraform, и в Ansible**.
 
-# форматирование и валидация
-terraform fmt
-terraform validate
+## Terraform / Terragrunt
 
-# план (если в каталоге есть terraform.tfvars, он будет загружен автоматически)
-terraform plan
+Каталог: `terraform/`
 
-# применение
-terraform apply
+```text
+terraform/
+├── root.hcl            # Общие настройки Terragrunt
+├── stage/
+│   ├── vpc/
+│   ├── inventory/
+│   └── blackbox/
+└── prod/
+    ├── vpc/
+    ├── inventory/
+    ├── monitoring/
+    └── blackbox/
 ```
 
-Альтернатива без `cd`:
+### Что делает Terraform
 
-```bash
-terraform -chdir=terraform/environment/prod init
-terraform -chdir=terraform/environment/prod plan
+* Создаёт VPC и сети
+* Создаёт VM для:
+
+  * monitoring
+  * blackbox
+* Формирует inventory (используется Ansible)
+* Управляет state через S3 (Terragrunt)
+
+Подробнее см. `terraform/Readme.md`
+
+## Ansible
+
+Каталог: `ansible/`
+
+```text
+ansible/
+├── inventories/        # Inventory по окружениям
+├── roles/              # Роли
+├── blackbox-prod.yaml  # Playbook prod
+├── blackbox-stage.yaml # Playbook stage
+└── Readme.md
 ```
 
-3. Сгенерированный inventory используйте для Ansible:
+## Ansible Roles
 
-```bash
-cd ../ansible
-ansible-playbook -i inventories/prod playbook.yaml
+### `common`
+
+Базовая подготовка сервера:
+
+* системные пакеты
+* базовые настройки
+
+### `docker`
+
+* Установка Docker
+* Docker Compose v2
+* Создание Docker network
+
+### `traefik`
+
+* Traefik v3 (Docker)
+* HTTPS (Let’s Encrypt)
+* staging / prod ACME
+* Синхронизация `acme.json` с S3
+* (опционально) Dashboard
+
+### `monitoring`
+
+Полноценный monitoring stack:
+
+* VictoriaMetrics
+* Alertmanager
+* vmalert
+* Grafana
+* Dashboards и rules
+
+### `blackbox-exporter`
+
+* Blackbox Exporter в Docker
+* Генерация scrape-конфигурации
+* Интеграция с monitoring
+
+## Playbooks
+
+### Production
+
+```yaml
+blackbox-prod.yaml
 ```
 
-## Что важно знать
+Логика:
 
-- ответственности: Terraform создаёт инфраструктуру и outputs (IP/FQDN), Ansible использует эти outputs для конфигурации и запуска сервисов. Не смешивайте обязанности между инструментами.
-- inventory генерируется через `terraform/inventory.tftpl` — если вы меняете имена outputs, обновите шаблон и `ansible/inventories`.
+1. Все сервера:
 
+   * `common`
+   * `docker`
+2. Monitoring сервер:
 
-## Полезные файлы
+   * `monitoring`
+   * `traefik`
+3. Blackbox сервер:
 
-- Основной playbook: `ansible/playbook.yaml`.
-- Роль blackbox: `ansible/roles/blackbox-exporter/` (`README.md`, `templates/docker-compose.yaml.j2`, `files/blackbox.yaml`).
-- Terraform module for instances: `terraform/modules/yc-instance/` (`README.md`).
+   * `blackbox-exporter`
+   * `traefik`
 
-## Отладка и полезные команды
+### Stage
 
-```bash
-# Terraform
-terraform fmt
-terraform validate
-# перейти в окружение, например:
-cd terraform/environment/stage
-terraform plan
-
-# Ansible
-ansible-playbook --syntax-check -i inventories/prod lackbox-prod.yaml 
-ansible-playbook -i inventories/prod/inventory.ini blackbox-prod.yaml --check --diff
-
-# На целевой машине
-docker compose -f /path/to/compose/docker-compose.yaml logs -f
-curl -s http://<blackbox_host>:9115/metrics | head -n 50
+```yaml
+blackbox-stage.yaml
 ```
 
+Stage-окружение совмещает роли:
 
+* monitoring
+* blackbox
+* traefik
+  на одном сервере.
+
+---
+
+##  Как пользоваться
+
+### Создать инфраструктуру
+
+```bash
+cd terraform/prod/
+terragrunt run --all init
+terragrunt run --all apply
+```
+
+---
+
+### Применить Ansible
+
+```bash
+cd ansible
+ansible-playbook -i inventories/prod/inventory.ini blackbox-prod.yaml
+```
+
+Для stage:
+
+```bash
+ansible-playbook -i inventories/stage/inventory.ini blackbox-stage.yaml
+```
+
+## Безопасность и best practices
+
+* HTTPS везде через Traefik
+* ACME сертификаты:
+
+  * staging для тестов
+  * production для prod
+* `acme.json` хранится в S3
+* Docker-сервисы не публикуются без `traefik.enable=true`
+* Разделение окружений на уровне каталогов
 

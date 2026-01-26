@@ -1,3 +1,4 @@
+# tasks.vmalert.yaml
 - name: create project {{ vmalert_container_name }}
   ansible.builtin.file:
     path: "{{ vmalert_dir }}"
@@ -24,7 +25,7 @@
     src: templates/vmalert_compose.yaml.j2
     dest: "{{ vmalert_dir }}/docker-compose.yaml"
     owner: "{{ username }}"
-    group: "{{ username }}" 
+    group: "{{ username }}"
 
 - name: Start Vmalert container
   community.docker.docker_compose_v2:

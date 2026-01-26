@@ -1,3 +1,4 @@
+# tasks/alertnamager.yaml
 - name: create folder {{ victoriametrics_container_name }}
   ansible.builtin.file:
     path: "{{ alertmanager_dir }}"
@@ -17,9 +18,9 @@
     src: templates/alertmanager_compose.yaml.j2
     dest: "{{ alertmanager_dir }}/docker-compose.yaml"
     owner: "{{ username }}"
-    group: "{{ username }}" 
+    group: "{{ username }}"
 
 - name: Start Alertmanager container
   community.docker.docker_compose_v2:
     project_src: "{{ alertmanager_dir }}"
-    state: present  
+    state: present

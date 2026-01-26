@@ -1,3 +1,4 @@
+# blackbox-stage.yaml
 - name: Config blackbox server
   hosts: monitoring-blackbox-server
   become: yes

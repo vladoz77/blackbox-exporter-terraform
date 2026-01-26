@@ -1,3 +1,4 @@
+# vars/ubuntu.yaml
 # docker repo config
 docker_repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
 docker_gpg_key: https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}/gpg
