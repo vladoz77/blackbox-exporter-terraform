@@ -1,0 +1,49 @@
+- name: Create user alloy
+  ansible.builtin.user:
+    name: "{{ alloy_username }}"
+    groups: "{{ alloy_groups }}"
+    append: true
+    system: true
+    shell: /usr/sbin/nologin 
+    state: present
+
+- name: Create alloy config folder
+  ansible.builtin.file:
+    name: "{{ alloy_config_dir }}"
+    state: directory
+
+- name: copy alloy config to {{ alloy_config_dir }}
+  ansible.builtin.template:
+    src: templates/config.alloy.j2
+    dest: "{{ alloy_config_dir }}/config.alloy"
+  notify: restart alloy
+    
+- name: Validate alloy config
+  ansible.builtin.shell:
+    "alloy validate {{ alloy_config_dir }}/config.alloy"
+  register: alloy_validate_output
+  failed_when: false
+  changed_when: false
+
+- ansible.builtin.debug:
+    msg: Config VALID
+  when: alloy_validate_output.rc == 0
+
+- name: Show validation error
+  ansible.builtin.debug:
+    msg: "Config is INVALID: {{ alloy_validate_output.stderr }}"
+  when: alloy_validate_output.rc != 0
+  
+    
+- name: copy systemd-unit for alloy
+  ansible.builtin.template:
+    src: templates/alloy.service.j2
+    dest: "{{systemd_unit_dir}}/alloy.service"
+  notify: restart alloy
+
+- name: start alloy
+  ansible.builtin.systemd:
+    service: alloy
+    state: started
+    daemon_reload: true
+    enabled: true

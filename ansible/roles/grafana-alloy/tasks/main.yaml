@@ -1,0 +1,7 @@
+- name: download alloy binary
+  ansible.builtin.include_tasks:
+    alloy-install.yaml
+
+- name: config alloy
+  ansible.builtin.include_tasks:
+    alloy-config.yaml

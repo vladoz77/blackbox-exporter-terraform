@@ -18,6 +18,11 @@
     group: "{{ username }}"
     owner: "{{ username }}"
 
+#- name: Create password hash for traefic auth
+#  ansible.builtin.set_fact:
+#    blackbox_exporter_basic_auth_password_hash: "{{ (blackbox_exporter_basic_auth_password[:15]) | password_hash('bcrypt') | replace('$', '$$')}}"
+#  when: blackbox_exporter_basic_auth_enabled
+
 - name: Create password hash for traefic auth
   ansible.builtin.include_tasks: generate-password-hash.yaml
   when: blackbox_exporter_basic_auth_enabled

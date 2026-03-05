@@ -1,0 +1,14 @@
+[Unit]
+Description=Alloy service
+After=network.target
+
+[Service]
+Type=simple
+User={{ alloy_username }}
+Group={{ alloy_username }}
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH
+AmbientCapabilities=CAP_DAC_READ_SEARCH
+ExecStart={{ install_path }}/alloy run --storage.path=/tmp/alloy/ {{ alloy_config_dir }}/config.alloy
+
+[Install]
+WantedBy=multi-user.target

@@ -138,7 +138,7 @@ terragrunt apply
 
 ```bash
 cd prod
-terragrunt run-all apply
+terragrunt run --all init
 ```
 
 ## DNS

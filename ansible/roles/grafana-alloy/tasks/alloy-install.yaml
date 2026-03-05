@@ -1,0 +1,35 @@
+- name: install unzip
+  ansible.builtin.apt:
+    name:
+      - unzip
+    state: present
+    update_cache: true
+
+- name: alloy binary download
+  ansible.builtin.uri:
+    url: "{{ alloy_url_download }}"
+    dest: "{{ extract_dir }}/alloy.zip"
+    force: no
+    status_code: [200, 304]
+
+- name: extract binary
+  ansible.builtin.unarchive:
+    src: "{{ extract_dir }}/alloy.zip"
+    dest: "{{ extract_dir }}"
+    remote_src: true
+    mode: 0755
+
+- name: move binary to "/usr/local/bin/"
+  ansible.builtin.copy:
+    src: "{{ extract_dir }}/alloy-linux-amd64"
+    dest: "{{ install_path }}/alloy"
+    remote_src: true
+    mode: '0755'
+
+- name: cleanup temporary files
+  ansible.builtin.file:
+    name: "{{ item }}"
+    state: absent
+  loop:
+   - "{{ extract_dir }}/alloy-linux-amd64"
+   - "{{ extract_dir }}/alloy.zip"

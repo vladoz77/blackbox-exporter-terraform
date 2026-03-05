@@ -3,7 +3,7 @@
 docker_network_name: ""
 
 # Blackbox Exporter configuration
-blackbox_exporter_docker_dir: "/home/{{ ansible_user }}/{{ blackbox_exporter_container_name }}"
+blackbox_exporter_docker_dir: "/home/{{ username }}/{{ blackbox_exporter_container_name }}"
 blackbox_exporter_repository: "prom/blackbox-exporter"
 blackbox_exporter_config_path: "/etc/blackbox-exporter/blackbox.yaml"
 blackbox_exporter_version: "0.28.0"

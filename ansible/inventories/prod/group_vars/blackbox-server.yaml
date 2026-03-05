@@ -5,6 +5,7 @@ docker_version: "5:28.5.2-1"
 packages:
 - jq
 - unzip
+- python3-passlib
 
 # traefik config
 traefik_docker_dir: /home/{{ ansible_user }}/traefik
