@@ -6,7 +6,7 @@ on:
       env:
         description: Target environment
         type: choice
-        default: apply
+        default: stage
         options:
         - stage
         - prod
@@ -35,6 +35,7 @@ jobs:
 
     - name: Config yandex provider
       run: |
+        set -euo pipefail
         echo "Creating ~/.terraformrc for Yandex Cloud mirror"
         cat > ~/.terraformrc <<EOF
         provider_installation {
