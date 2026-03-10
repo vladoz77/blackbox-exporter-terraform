@@ -6,7 +6,7 @@ on:
       env:
         description: Target environment
         type: choice
-        default: apply
+        default: stage
         options:
         - stage
         - prod
