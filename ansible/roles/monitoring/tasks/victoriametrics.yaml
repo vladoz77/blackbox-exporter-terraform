@@ -12,7 +12,7 @@
     state: directory
     owner: "{{ username }}"
     group: "{{ username }}"
-    mode: '0755'
+    mode: "0755"
 
 - name: copy template scrape config to {{ victoriametrics_dir }}
   ansible.builtin.template:
@@ -20,6 +20,8 @@
     dest: "{{ victoriametrics_dir }}/scrape.yaml"
     owner: "{{ username }}"
     group: "{{ username }}"
+    mode: "0644"
+  notify: restart victoriametrics
 
 - name: Create Victoriametrics docker-compose file
   ansible.builtin.template:
@@ -27,8 +29,6 @@
     dest: "{{ victoriametrics_dir }}/docker-compose.yaml"
     owner: "{{ username }}"
     group: "{{ username }}"
+    mode: "0644"
+  notify: restart victoriametrics
 
-- name: Start Victoriametrics container
-  community.docker.docker_compose_v2:
-    project_src: "{{ victoriametrics_dir }}"
-    state: present

@@ -1,0 +1,20 @@
+- name: restart victoriametrics
+  community.docker.docker_compose_v2:
+    project_src: "{{ victoriametrics_dir }}"
+    state: present
+
+- name: restart alertmanager
+  community.docker.docker_compose_v2:
+    project_src: "{{ alertmanager_dir }}"
+    state: present
+
+- name: restart vmalert
+  community.docker.docker_compose_v2:
+    project_src: "{{ vmalert_dir }}"
+    state: present
+
+- name: restart grafana
+  community.docker.docker_compose_v2:
+    project_src: "{{ grafana_dir }}"
+    state: present
+
