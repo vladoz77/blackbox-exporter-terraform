@@ -1,52 +1,84 @@
 # tasks/main.yaml
-- name: install {{ victoriametrics_container_name }}
-  ansible.builtin.include_tasks: victoriametrics.yaml
-  when: victoriametrics_enable | default(true) | bool
-
-- name: Wait for VictoriaMetrics to be healthy
+- name: Check if VictoriaMetrics is already running
   ansible.builtin.uri:
     url: "http://localhost:{{ victoriametrics_port }}/health"
     method: GET
     status_code: 200
-    timeout: 10
-  register: vm_health
-  until: vm_health.status == 200
-  retries: 30
-  delay: 10
-  when: victoriametrics_enable | default(true) | bool
+    timeout: 5
+  register: vm_health_check
+  failed_when: false
+  changed_when: false
+  when: victoriametrics_enable 
 
-- name: install {{ alertmanager_container_name }}
-  ansible.builtin.include_tasks: alertmanager.yaml
-  when: alertmanager_enable | default(true) | bool
+- name: Report VictoriaMetrics status
+  ansible.builtin.debug:
+    msg: "{{ 'VictoriaMetrics already running' if vm_health_check.status == 200 else 'VictoriaMetrics proceeding with installation' }}"
+  changed_when: false
 
-- name: Wait for Alertmanager to be healthy
+- name: install {{ victoriametrics_container_name }}
+  ansible.builtin.include_tasks: victoriametrics.yaml
+  when: victoriametrics_enable  and vm_health_check.status != 200
+
+- name: Check if Alertmanager is already running
   ansible.builtin.uri:
     url: "http://localhost:{{ alertmanager_port }}/-/healthy"
     method: GET
     status_code: 200
-    timeout: 10
-  register: am_health
-  until: am_health.status == 200
-  retries: 20
-  delay: 10
-  when: alertmanager_enable | default(true) | bool
+    timeout: 5
+  register: am_health_check
+  failed_when: false
+  changed_when: false
+  when: alertmanager_enable 
+
+- name: Report Alertmanager status
+  ansible.builtin.debug:
+    msg: "{{ 'Alertmanager Already running' if am_health_check.status == 200 else 'Alertmanager Proceeding with installation' }}"
+  changed_when: false
+
+- name: install {{ alertmanager_container_name }}
+  ansible.builtin.include_tasks: alertmanager.yaml
+  when: alertmanager_enable and am_health_check.status != 200
+
+- name: Check if vmalert is already running
+  ansible.builtin.uri:
+    url: "http://localhost:{{ vmalert_port }}/health"
+    method: GET
+    status_code: 200
+    timeout: 5
+  ignore_errors: true
+  register: vmalert_health_check
+  changed_when: false
+  failed_when: false
+  when: vmalert_enable
+
+- name: Report Vmalert status
+  ansible.builtin.debug:
+    msg: "{{ 'Vmalert Already running' if vmalert_health_check.status == 200 else 'Vmalert Proceeding with installation' }}"
+  changed_when: false
+  failed_when: false
 
 - name: install {{ vmalert_container_name }}
   ansible.builtin.include_tasks: vmalert.yaml
-  when: vmalert_enable | default(true) | bool
-
-- name: install {{ grafana_container_name }}
-  ansible.builtin.include_tasks: grafana.yaml
-  when: grafana_enable | default(true) | bool
+  when: vmalert_enable and vmalert_health_check.status != 200
 
 - name: Wait for Grafana to be ready
   ansible.builtin.uri:
     url: "http://localhost:{{ grafana_port }}/api/health"
     method: GET
     status_code: 200
-    timeout: 10
-  register: grafana_health
-  until: grafana_health.status == 200
-  retries: 40
-  delay: 15
-  when: grafana_enable | default(true) | bool
+    timeout: 5
+  ignore_errors: true
+  register: grafana_health_check
+  changed_when: false
+  failed_when: false
+  when: grafana_enable 
+
+- name: Report Grafana status
+  ansible.builtin.debug:
+    msg: "{{ 'Grafana Already running' if grafana_health_check.status == 200 else 'Grafana Proceeding with installation' }}"
+  changed_when: false
+
+- name: install {{ grafana_container_name }}
+  ansible.builtin.include_tasks: grafana.yaml
+  when: grafana_enable and grafana_health_check.status != 200
+
