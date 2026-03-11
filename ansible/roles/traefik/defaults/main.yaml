@@ -28,5 +28,3 @@ yandex_storage_endpoint: https://storage.yandexcloud.net/
 s3_bucket_name: acme-bucket
 s3_key_staging: "{{ ansible_facts['hostname'] }}/acme-staging.json"
 s3_key_prod: "{{ ansible_facts['hostname'] }}/acme-prod.json"
-aws_access_key: 
-aws_secret_key: 

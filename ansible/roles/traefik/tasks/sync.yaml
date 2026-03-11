@@ -1,4 +1,13 @@
 # tasks/sync.yaml
+- name: Assert AWS credentials are provided when syncing ACME to S3
+  ansible.builtin.assert:
+    that:
+      - aws_access_key is defined
+      - aws_access_key | string | length > 0
+      - aws_secret_key is defined
+      - aws_secret_key | string | length > 0
+    fail_msg: "aws_access_key/aws_secret_key must be set when traefik_acme_sync_to_s3 is true"
+
 - name: Determine ACME file and S3 key
   set_fact:
     acme_local_file: "{{ traefik_acme_file_staging if traefik_acme_staging else traefik_acme_file_prod }}"
