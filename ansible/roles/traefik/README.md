@@ -54,6 +54,12 @@ traefik/
   * 443/tcp
 * S3-совместимое хранилище (Yandex Object Storage)
 
+Установка коллекций:
+
+```bash
+ansible-galaxy collection install -r ansible/roles/traefik/requirements.yaml
+```
+
 ## Переменные роли
 
 ### Общие
@@ -89,16 +95,29 @@ traefik/
 
 ### S3 (Yandex Object Storage)
 
-| Переменная                | Описание               |
-| ------------------------- | ---------------------- |
-| `traefik_acme_sync_to_s3` | Включить синхронизацию |
-| `yandex_region`           | Регион                 |
-| `yandex_storage_endpoint` | S3 endpoint            |
-| `s3_bucket_name`          | Bucket                 |
-| `s3_key_staging`          | Ключ staging           |
-| `s3_key_prod`             | Ключ production        |
-| `aws_access_key`          | Access Key             |
-| `aws_secret_key`          | Secret Key             |
+| Переменная                | Описание                                 |
+| ------------------------- | ---------------------------------------- |
+| `traefik_acme_sync_to_s3` | Включить синхронизацию                   |
+| `yandex_region`           | Регион                                   |
+| `yandex_storage_endpoint` | S3 endpoint                              |
+| `s3_bucket_name`          | Bucket                                   |
+| `s3_key_staging`          | Ключ staging                             |
+| `s3_key_prod`             | Ключ production                          |
+
+> ℹ️ **AWS/Yandex credentials**
+>
+> Роль **не задаёт** `aws_access_key` и `aws_secret_key` в `defaults`.  
+> Эти переменные **обязательны**, если:
+>
+> - при установке Traefik нужно скачивать `acme.json` из S3;  
+> - включена синхронизация `traefik_acme_sync_to_s3: true`.
+>
+> Передавайте их через:
+>
+> - `group_vars` / `host_vars`, или
+> - `--extra-vars` / из CI (GitHub Actions, и т.п.).
+>
+> В начале задач `install.yaml` и `sync.yaml` есть `assert`, который упадёт с понятным сообщением, если `aws_access_key` / `aws_secret_key` не заданы.
 
 ## Пример использования
 
