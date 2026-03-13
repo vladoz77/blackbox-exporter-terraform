@@ -30,3 +30,16 @@
     mode: "0644"
   notify: restart vmalert
 
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Wait for Vmalert to be healthy
+  ansible.builtin.uri:
+    url: "http://localhost:{{ vmalert_port }}/health"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: vmalert_health
+  until: vmalert_health.status == 200
+  retries: 20
+  delay: 10

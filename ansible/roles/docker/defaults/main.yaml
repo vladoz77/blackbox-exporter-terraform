@@ -1,11 +1,10 @@
 # default/main.yaml
 docker_network_name: docker_default
-docker_version: "5:28.5.2-1"
 
 # Packages
 docker_packages:
-  - "docker-ce={{ docker_version }}~ubuntu.{{ ansible_distribution_version }}~{{ ansible_distribution_release }}"
-  - "docker-ce-cli={{ docker_version }}~ubuntu.{{ ansible_distribution_version }}~{{ ansible_distribution_release }}"
+  - docker-ce
+  - docker-ce-cli
   - containerd.io
   - docker-buildx-plugin
   - docker-compose-plugin

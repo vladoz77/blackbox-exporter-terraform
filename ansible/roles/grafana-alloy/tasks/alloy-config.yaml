@@ -4,7 +4,7 @@
     groups: "{{ alloy_groups }}"
     append: true
     system: true
-    shell: /usr/sbin/nologin 
+    shell: /usr/sbin/nologin
     state: present
 
 - name: Create alloy config folder
@@ -17,10 +17,9 @@
     src: templates/config.alloy.j2
     dest: "{{ alloy_config_dir }}/config.alloy"
   notify: restart alloy
-    
+
 - name: Validate alloy config
-  ansible.builtin.shell:
-    "alloy validate {{ alloy_config_dir }}/config.alloy"
+  ansible.builtin.shell: "alloy validate {{ alloy_config_dir }}/config.alloy"
   register: alloy_validate_output
   failed_when: false
   changed_when: false
@@ -33,8 +32,7 @@
   ansible.builtin.debug:
     msg: "Config is INVALID: {{ alloy_validate_output.stderr }}"
   when: alloy_validate_output.rc != 0
-  
-    
+
 - name: copy systemd-unit for alloy
   ansible.builtin.template:
     src: templates/alloy.service.j2
@@ -47,3 +45,6 @@
     state: started
     daemon_reload: true
     enabled: true
+
+- name: Flush handlers
+  meta: flush_handlers

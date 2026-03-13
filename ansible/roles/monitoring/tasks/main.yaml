@@ -14,6 +14,7 @@
   ansible.builtin.debug:
     msg: "{{ 'VictoriaMetrics already running' if vm_health_check.status == 200 else 'VictoriaMetrics proceeding with installation' }}"
   changed_when: false
+  when: victoriametrics_enable 
 
 - name: install {{ victoriametrics_container_name }}
   ansible.builtin.include_tasks: victoriametrics.yaml
@@ -34,6 +35,7 @@
   ansible.builtin.debug:
     msg: "{{ 'Alertmanager Already running' if am_health_check.status == 200 else 'Alertmanager Proceeding with installation' }}"
   changed_when: false
+  when: alertmanager_enable 
 
 - name: install {{ alertmanager_container_name }}
   ansible.builtin.include_tasks: alertmanager.yaml
@@ -56,6 +58,7 @@
     msg: "{{ 'Vmalert Already running' if vmalert_health_check.status == 200 else 'Vmalert Proceeding with installation' }}"
   changed_when: false
   failed_when: false
+  when: vmalert_enable
 
 - name: install {{ vmalert_container_name }}
   ansible.builtin.include_tasks: vmalert.yaml
@@ -77,6 +80,7 @@
   ansible.builtin.debug:
     msg: "{{ 'Grafana Already running' if grafana_health_check.status == 200 else 'Grafana Proceeding with installation' }}"
   changed_when: false
+  when: grafana_enable 
 
 - name: install {{ grafana_container_name }}
   ansible.builtin.include_tasks: grafana.yaml

@@ -24,3 +24,16 @@
     mode: "0644"
   notify: restart alertmanager
 
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Wait for Alertmanager to be healthy
+  ansible.builtin.uri:
+    url: "http://localhost:{{ alertmanager_port }}/-/healthy"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: am_health
+  until: am_health.status == 200
+  retries: 20
+  delay: 10

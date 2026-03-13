@@ -9,7 +9,7 @@ traefik_dependencies:
 docker_network_name: "traefik"
 traefik_container_name: traefik
 traefik_image: "traefik"
-traefik_version: "v3.5"
+traefik_version: "v3.6"
 traefik_docker_dir: "/home/{{ ansible_user }}/{{ traefik_container_name }}"
 
 # Dashboard config

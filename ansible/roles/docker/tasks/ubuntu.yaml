@@ -27,6 +27,9 @@
       allow_downgrade: yes
     notify: started_docker
 
+  - name: Flush handlers
+    meta: flush_handlers
+
   - name: Hold docker packages
     ansible.builtin.command: apt-mark hold {{ item }}
     loop:
