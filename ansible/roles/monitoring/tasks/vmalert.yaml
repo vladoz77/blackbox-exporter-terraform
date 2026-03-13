@@ -1,4 +1,4 @@
-# tasks.vmalert.yaml
+# tasks/vmalert.yaml
 - name: create project {{ vmalert_container_name }}
   ansible.builtin.file:
     path: "{{ vmalert_dir }}"
@@ -19,6 +19,7 @@
     dest: "{{ vmalert_rules_folder }}"
     owner: "{{ username }}"
     group: "{{ username }}"
+    mode: "0644"
 
 - name: Create Vmalert docker-compose file
   ansible.builtin.template:
@@ -26,8 +27,19 @@
     dest: "{{ vmalert_dir }}/docker-compose.yaml"
     owner: "{{ username }}"
     group: "{{ username }}"
+    mode: "0644"
+  notify: restart vmalert
 
-- name: Start Vmalert container
-  community.docker.docker_compose_v2:
-    project_src: "{{ vmalert_dir }}"
-    state: present
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Wait for Vmalert to be healthy
+  ansible.builtin.uri:
+    url: "http://localhost:{{ vmalert_port }}/health"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: vmalert_health
+  until: vmalert_health.status == 200
+  retries: 20
+  delay: 10

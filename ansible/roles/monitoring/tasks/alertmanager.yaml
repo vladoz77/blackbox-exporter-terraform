@@ -1,5 +1,5 @@
-# tasks/alertnamager.yaml
-- name: create folder {{ victoriametrics_container_name }}
+# tasks/alertmanager.yaml
+- name: create folder {{ alertmanager_container_name }}
   ansible.builtin.file:
     path: "{{ alertmanager_dir }}"
     group: "{{ username }}"
@@ -12,6 +12,8 @@
     dest: "{{ alertmanager_dir }}/alertmanager.yaml"
     owner: "{{ username }}"
     group: "{{ username }}"
+    mode: "0644"
+  notify: restart alertmanager
 
 - name: Create Alertmanager docker-compose file
   ansible.builtin.template:
@@ -19,8 +21,19 @@
     dest: "{{ alertmanager_dir }}/docker-compose.yaml"
     owner: "{{ username }}"
     group: "{{ username }}"
+    mode: "0644"
+  notify: restart alertmanager
 
-- name: Start Alertmanager container
-  community.docker.docker_compose_v2:
-    project_src: "{{ alertmanager_dir }}"
-    state: present
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Wait for Alertmanager to be healthy
+  ansible.builtin.uri:
+    url: "http://localhost:{{ alertmanager_port }}/-/healthy"
+    method: GET
+    status_code: 200
+    timeout: 10
+  register: am_health
+  until: am_health.status == 200
+  retries: 20
+  delay: 10

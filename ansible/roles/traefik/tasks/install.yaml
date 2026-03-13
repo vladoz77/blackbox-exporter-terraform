@@ -1,4 +1,13 @@
 # tasks/install.yaml
+- name: Assert AWS credentials are provided to fetch ACME from S3
+  ansible.builtin.assert:
+    that:
+      - aws_access_key is defined
+      - aws_access_key | string | length > 0
+      - aws_secret_key is defined
+      - aws_secret_key | string | length > 0
+    fail_msg: "aws_access_key/aws_secret_key must be set to download ACME from S3"
+
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: yes

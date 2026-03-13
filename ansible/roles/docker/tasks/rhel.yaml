@@ -21,6 +21,9 @@
       update_cache: true
     notify: started_docker
 
+  - name: Flush handlers
+    meta: flush_handlers
+
   - name: add user to docker group
     ansible.builtin.user:
       user: "{{ ansible_user }}"

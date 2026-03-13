@@ -4,17 +4,20 @@ traefik_dependencies:
   - python3-pip
   - python3-boto3
   - python3-botocore
+
 # docker config
 docker_network_name: "traefik"
 traefik_container_name: traefik
 traefik_image: "traefik"
-traefik_version: "v3.5"
+traefik_version: "v3.6"
 traefik_docker_dir: "/home/{{ ansible_user }}/{{ traefik_container_name }}"
+
 # Dashboard config
 traefik_enable_dashboard: false
 traefik_dashboard_url: "traefik.home.local"
 traefik_dashboard_user: "admin"
 traefik_dashboard_password_hash: "$$apr1$$CmiVRFjs$$bPQcSgQ.2HcTzM.HVTvAl1"  # admin:admin
+
 # Acme config
 traefik_acme_staging: false # true = staging, false = production
 acme_email: "vladoz77@yandex.ru"
@@ -22,11 +25,10 @@ traefik_letsencrypt_path: "{{ traefik_docker_dir }}/letsencrypt"
 traefik_acme_file_staging: "{{ traefik_letsencrypt_path }}/acme-staging.json"
 traefik_acme_file_prod: "{{ traefik_letsencrypt_path }}/acme-prod.json"
 traefik_acme_sync_to_s3: true
+
 # config bucket
 yandex_region: ru-central1
 yandex_storage_endpoint: https://storage.yandexcloud.net/
 s3_bucket_name: acme-bucket
 s3_key_staging: "{{ ansible_facts['hostname'] }}/acme-staging.json"
 s3_key_prod: "{{ ansible_facts['hostname'] }}/acme-prod.json"
-aws_access_key: 
-aws_secret_key: 
