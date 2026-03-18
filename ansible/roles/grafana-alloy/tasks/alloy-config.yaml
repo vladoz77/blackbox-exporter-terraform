@@ -11,40 +11,40 @@
   ansible.builtin.file:
     name: "{{ alloy_config_dir }}"
     state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create alloy storage folder
+  ansible.builtin.file:
+    name: "{{ alloy_storage_dir }}"
+    state: directory
+    owner: "{{ alloy_username }}"
+    group: "{{ alloy_username }}"
+    mode: "0755"
 
 - name: copy alloy config to {{ alloy_config_dir }}
   ansible.builtin.template:
-    src: templates/config.alloy.j2
+    src: config.alloy.j2
     dest: "{{ alloy_config_dir }}/config.alloy"
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "{{ install_path }}/alloy validate %s"
   notify: restart alloy
-
-- name: Validate alloy config
-  ansible.builtin.shell: "alloy validate {{ alloy_config_dir }}/config.alloy"
-  register: alloy_validate_output
-  failed_when: false
-  changed_when: false
-
-- ansible.builtin.debug:
-    msg: Config VALID
-  when: alloy_validate_output.rc == 0
-
-- name: Show validation error
-  ansible.builtin.debug:
-    msg: "Config is INVALID: {{ alloy_validate_output.stderr }}"
-  when: alloy_validate_output.rc != 0
 
 - name: copy systemd-unit for alloy
   ansible.builtin.template:
-    src: templates/alloy.service.j2
-    dest: "{{systemd_unit_dir}}/alloy.service"
+    src: alloy.service.j2
+    dest: "{{ systemd_unit_dir }}/alloy.service"
+    owner: root
+    group: root
+    mode: "0644"
   notify: restart alloy
 
 - name: start alloy
   ansible.builtin.systemd:
-    service: alloy
+    name: alloy
     state: started
     daemon_reload: true
     enabled: true
-
-- name: Flush handlers
-  meta: flush_handlers

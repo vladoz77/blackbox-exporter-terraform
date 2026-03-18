@@ -1,11 +1,15 @@
 alloy_version: v1.10.2
 alloy_url_download: https://github.com/grafana/alloy/releases/download/{{ alloy_version }}/alloy-linux-amd64.zip
 alloy_config_dir: /etc/alloy
+alloy_storage_dir: /var/lib/alloy
 alloy_username: alloy
 alloy_groups:
   - adm
   - systemd-journal
   - docker
 alloy_enable_docker: true
-prometeus_url: prometheus.home-local.site
+prometheus_url: prometheus.home-local.site
+alloy_prometheus_scheme: https
+alloy_loki_scheme: http
+alloy_skip_tls_verify: false
 loki_url: loki.home-local.site
