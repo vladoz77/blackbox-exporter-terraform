@@ -40,11 +40,5 @@
     owner: root
     group: root
     mode: "0644"
+    validate: systemd-analyze verify %s
   notify: restart alloy
-
-- name: start alloy
-  ansible.builtin.systemd:
-    name: alloy
-    state: started
-    daemon_reload: true
-    enabled: true

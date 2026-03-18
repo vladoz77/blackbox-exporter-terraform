@@ -13,3 +13,4 @@ alloy_prometheus_scheme: https
 alloy_loki_scheme: http
 alloy_skip_tls_verify: false
 loki_url: loki.home-local.site
+alloy_healthcheck_url: http://127.0.0.1:12345/-/healthy

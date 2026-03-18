@@ -1,6 +1,23 @@
+- name: check alloy health endpoint
+  ansible.builtin.uri:
+    url: "{{ alloy_healthcheck_url }}"
+    method: GET
+    return_content: false
+    status_code: 200
+    timeout: 3
+  register: alloy_healthcheck
+  failed_when: false
+  changed_when: false
+
+- name: Report alloy status
+  ansible.builtin.debug:
+    msg: "{{ 'Alloy already running' if (alloy_healthcheck.status | default(0)) == 200 else 'Alloy proceeding with installation' }}"
+  changed_when: false
+
 - name: download alloy binary
   ansible.builtin.include_tasks:
     alloy-install.yaml
+  when: (alloy_healthcheck.status | default(0)) != 200
 
 - name: config alloy
   ansible.builtin.include_tasks:
