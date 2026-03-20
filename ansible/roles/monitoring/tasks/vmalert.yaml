@@ -28,6 +28,7 @@
     owner: "{{ username }}"
     group: "{{ username }}"
     mode: "0644"
+    validate: "docker compose -f %s config -q"
   notify: restart vmalert
 
 - name: Flush handlers

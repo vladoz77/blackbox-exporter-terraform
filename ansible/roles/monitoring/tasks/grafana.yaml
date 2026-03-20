@@ -43,6 +43,7 @@
     dest: "{{ grafana_dir }}/docker-compose.yaml"
     owner: "{{ username }}"
     mode: "0644"
+    validate: "docker compose -f %s config -q"
   notify: restart grafana
 
 - name: Flush handlers

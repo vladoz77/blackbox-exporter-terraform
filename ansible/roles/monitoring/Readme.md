@@ -18,6 +18,7 @@ Ansible-роль для развёртывания полноценного ст
 ## Возможности
 
 * Развёртывание monitoring-стека через Docker Compose
+* Валидация docker-compose шаблонов через `docker compose config -q` перед применением
 * Health-check и ожидание готовности сервисов
 * Автоматический provisioning Grafana:
 
@@ -148,4 +149,3 @@ monitoring/
 * HTTPS
 * Host-based routing
 * Let's Encrypt
-
