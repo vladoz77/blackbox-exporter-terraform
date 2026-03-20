@@ -3,7 +3,7 @@
   hosts: all
   become: true
   vars:
-    prometeus_url: prometheus.home-local.site
+    prometheus_url: prometheus.home-local.site
   roles:
   - common
   - docker

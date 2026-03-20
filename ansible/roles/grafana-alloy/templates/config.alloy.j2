@@ -1,16 +1,18 @@
 // Define where to send logs for storage
 prometheus.remote_write "prometheus" {
   endpoint {
-    url = "https://prometheus.home-local.site/api/v1/write"
+    url = "{{ alloy_prometheus_scheme }}://{{ prometheus_url }}/api/v1/write"
+{% if alloy_skip_tls_verify %}
     tls_config {
-     insecure_skip_verify = true
+      insecure_skip_verify = true
     }
+{% endif %}
   }
 }
 
 loki.write "loki" {
   endpoint {
-    url = "http://{{ loki_url }}/loki/api/v1/push"
+    url = "{{ alloy_loki_scheme }}://{{ loki_url }}/loki/api/v1/push"
     batch_size = "1MiB"
     batch_wait = "2s"
   }

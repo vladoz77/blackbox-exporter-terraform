@@ -28,7 +28,7 @@ blackbox_scrape_config_dir: "{{ additional_scrape_configs_dir }}"
 monitoring_server_groups: monitoring-blackbox-server
 
 # Grafana alloy config
-prometeus_url: prometheus.home-local.site
+prometheus_url: prometheus.home-local.site
 loki_url: loki.home-local.site
 alloy_enable_docker: true
 alloy_groups:
