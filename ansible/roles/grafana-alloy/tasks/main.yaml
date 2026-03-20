@@ -11,13 +11,13 @@
 
 - name: Report alloy status
   ansible.builtin.debug:
-    msg: "{{ 'Alloy already running' if (alloy_healthcheck.status | default(0)) == 200 else 'Alloy proceeding with installation' }}"
+    msg: "{{ 'Alloy already running' if alloy_healthcheck.status == 200 else 'Alloy proceeding with installation' }}"
   changed_when: false
 
 - name: download alloy binary
   ansible.builtin.include_tasks:
     alloy-install.yaml
-  when: (alloy_healthcheck.status | default(0)) != 200
+  when: alloy_healthcheck.status != 200
 
 - name: config alloy
   ansible.builtin.include_tasks:
