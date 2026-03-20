@@ -82,6 +82,7 @@ grafana-alloy/
    * создание пользователя и директорий
    * шаблонизация `config.alloy` и `alloy.service`
 5. При изменении шаблонов вызывается handler `restart alloy`.
+6. После применения конфигурации роль сразу выполняет `meta: flush_handlers`, чтобы рестарт произошел в рамках этого же прогона задач.
 
 ## Handler
 
@@ -100,4 +101,3 @@ grafana-alloy/
   roles:
     - role: grafana-alloy
 ```
-

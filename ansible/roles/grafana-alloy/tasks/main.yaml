@@ -22,3 +22,6 @@
 - name: config alloy
   ansible.builtin.include_tasks:
     alloy-config.yaml
+
+- name: flush alloy handlers
+  ansible.builtin.meta: flush_handlers
