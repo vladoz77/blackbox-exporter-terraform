@@ -1,4 +1,10 @@
 # tasks/install.yaml
+- name: Assert supported OS family for traefik role
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family == "Debian"
+    fail_msg: "traefik role currently supports Debian family hosts only"
+
 - name: Assert AWS credentials are provided to fetch ACME from S3
   ansible.builtin.assert:
     that:
@@ -7,6 +13,7 @@
       - aws_secret_key is defined
       - aws_secret_key | string | length > 0
     fail_msg: "aws_access_key/aws_secret_key must be set to download ACME from S3"
+  when: traefik_acme_sync_to_s3
 
 - name: Update apt cache
   ansible.builtin.apt:
@@ -54,6 +61,7 @@
     region: "{{ yandex_region }}"
   register: s3_acme_info
   failed_when: false
+  when: traefik_acme_sync_to_s3
 
 - name: Download acme.json from S3 if exists
   amazon.aws.s3_object:
@@ -66,7 +74,10 @@
     access_key: "{{ aws_access_key }}"
     secret_key: "{{ aws_secret_key }}"
   failed_when: false
-  when: s3_acme_info.error is not defined and not local_acme.stat.exists
+  when:
+    - traefik_acme_sync_to_s3
+    - s3_acme_info.error is not defined
+    - not local_acme.stat.exists
 
 - name: Create empty ACME file if it does not exist locally and not on S3
   ansible.builtin.file:
@@ -75,7 +86,9 @@
     mode: '0600'
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
-  when: not local_acme.stat.exists and s3_acme_info.error is defined
+  when: 
+   - not local_acme.stat.exists 
+   - s3_acme_info.error is defined or not traefik_acme_sync_to_s3
 
 - name: Set correct permissions on acme.json
   ansible.builtin.file:
@@ -84,7 +97,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
 
-- name: Copy template to traefic folder
+- name: Copy template to traefik folder
   ansible.builtin.template:
     src: "templates/docker-compose-traefik.yaml.j2"
     dest: "{{ traefik_docker_dir }}/docker-compose.yaml"

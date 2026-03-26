@@ -4,7 +4,7 @@ services:
       container_name: {{ traefik_container_name }}
       restart: always
       command:
-        - "--api.insecure=true"
+        - "--api.dashboard=true"
         - "--providers.docker=true"
         - "--entrypoints.web.address=:80"
         - "--entryPoints.websecure.address=:443"
@@ -35,9 +35,9 @@ services:
         - "traefik.http.routers.dashboard.entrypoints=websecure"
         - "traefik.http.routers.dashboard.service=api@internal"
         - "traefik.http.routers.dashboard.tls.certresolver=le"
-        {% endif -%}
         - "traefik.http.middlewares.dashboard-auth.basicauth.users={{ traefik_dashboard_user }}:{{ traefik_dashboard_password_hash }}"
         - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+        {% endif -%}
       ports:
         - "80:80"
         - "443:443"
