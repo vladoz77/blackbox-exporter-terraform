@@ -1,121 +1,69 @@
 # Ansible Role: docker
 
-Ansible-роль для установки и базовой настройки **Docker Engine** и сопутствующих компонентов на Linux-системах.
-Поддерживаются дистрибутивы семейства **Debian/Ubuntu** и **RHEL/CentOS**.
+Роль устанавливает Docker Engine и подготавливает хост для запуска остальных сервисов проекта.
 
-Роль:
+## Что делает роль
 
-* устанавливает Docker из официального репозитория
-* фиксирует версию пакетов (Ubuntu)
-* добавляет пользователя в группу `docker`
-* включает и запускает сервис Docker
-* создаёт Docker-сеть
+* выбирает набор задач по `ansible_facts.os_family`
+* устанавливает Docker CE и compose plugin
+* запускает и включает `docker.service`
+* создаёт внешнюю docker network
 
-## Возможности
-
-* Установка Docker CE
-* Поддержка Ubuntu / Debian и RHEL / CentOS
-* Контроль версии Docker
-* Автоматический запуск и enable сервиса
-* Создание внешней Docker-сети
-* Идемпотентное выполнение (проверка существующего сервиса)
-
-## Структура роли
+## Структура
 
 ```text
 docker/
-├── defaults
-│   └── main.yaml        # Переменные по умолчанию
-├── handlers
-│   └── main.yaml        # Запуск и enable Docker
-├── tasks
-│   ├── main.yaml        # Выбор задач по OS
-│   ├── ubuntu.yaml     # Установка для Debian/Ubuntu
-│   └── rhel.yaml       # Установка для RHEL/CentOS
-├── vars
-│   ├── ubuntu.yaml     # Репозиторий и GPG для Ubuntu
-│   └── rhel.yaml       # Репозиторий и пакеты для RHEL
-└── README.md
+├── defaults/
+│   └── main.yaml
+├── handlers/
+│   └── main.yaml
+├── tasks/
+│   ├── main.yaml
+│   ├── rhel.yaml
+│   └── ubuntu.yaml
+├── vars/
+│   ├── rhel
+│   └── ubuntu
+└── Readme.md
 ```
 
 ## Поддерживаемые ОС
 
-| ОС                | Статус                                    |
-| ----------------- | ----------------------------------------- |
-| Ubuntu            | ✅                                         |
-| Debian            | ✅ (через Debian family)                   |
-| RHEL / CentOS     | ✅                                         |
-| Rocky / AlmaLinux | ⚠️ (не тестировалось, но должно работать) |
+* Debian family
+* RedHat family
 
-## Переменные роли
+Конкретный сценарий выбирается в `tasks/main.yaml`.
 
-### Основные (defaults)
+## Переменные
 
-| Переменная            | Описание                    | По умолчанию     |
-| --------------------- | --------------------------- | ---------------- |
-| `docker_version`      | Версия Docker CE            | `5:28.5.2-1`     |
-| `docker_service_name` | Имя сервиса Docker          | `docker.service` |
-| `docker_network_name` | Имя создаваемой Docker-сети | `docker_default` |
+### `defaults/main.yaml`
 
-### Пакеты (Ubuntu)
+| Переменная | Описание | По умолчанию |
+| --- | --- | --- |
+| `docker_network_name` | Имя внешней docker network | `docker_default` |
+| `docker_packages` | Пакеты Docker для Debian family | `docker-ce`, `docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin` |
+| `docker_service_name` | Имя systemd-сервиса | `docker.service` |
 
-```yaml
-docker_packages:
-  - docker-ce
-  - docker-ce-cli
-  - containerd.io
-  - docker-buildx-plugin
-  - docker-compose-plugin
-```
+### `vars/ubuntu`
 
-Версии пакетов жёстко фиксируются и **блокируются (`apt-mark hold`)**.
+* `docker_repo`
+* `docker_gpg_key`
 
-## Логика работы роли
+### `vars/rhel`
 
-1. Определяется семейство ОС (`Debian` / `RedHat`)
-2. Подгружаются соответствующие переменные
-3. Проверяется, установлен ли сервис Docker
-4. Если Docker **не установлен**:
+* `repo_url`
+* `repo_dest`
+* `packages`
+* `docker_service_name`
 
-   * добавляется официальный репозиторий
-   * устанавливаются пакеты
-   * пользователь добавляется в группу `docker`
-   * создаётся Docker-сеть
-   * сервис Docker запускается и включается в автозапуск
-5. Если Docker уже установлен — роль ничего не меняет
+## Логика работы
 
-## Handlers
+1. Роль определяет семейство ОС.
+2. Подключает `ubuntu.yaml` или `rhel.yaml`.
+3. Устанавливает Docker из официального репозитория для выбранной платформы.
+4. Запускает Docker и создаёт сеть `{{ docker_network_name }}`.
 
-### Запуск Docker
-
-```yaml
-- name: started_docker
-  systemd:
-    name: docker.service
-    state: started
-    enabled: true
-```
-
-Вызывается после установки пакетов.
-
-## Docker network
-
-Роль создаёт внешнюю Docker-сеть:
-
-```yaml
-docker_network:
-  name: "{{ docker_network_name }}"
-```
-
-Полезно для:
-
-* Traefik
-* Monitoring
-* Связи между сервисами
-
-## Пример использования
-
-### Простой playbook
+## Пример
 
 ```yaml
 - hosts: all
@@ -123,16 +71,3 @@ docker_network:
   roles:
     - role: docker
 ```
-
-### С кастомной сетью и версией
-
-```yaml
-- hosts: all
-  become: true
-  roles:
-    - role: docker
-      vars:
-        docker_network_name: monitoring
-        docker_version: "5:28.5.2-1"
-```
-

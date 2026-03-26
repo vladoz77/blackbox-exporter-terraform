@@ -1,107 +1,68 @@
-# Terragrunt инфраструктура (Yandex Cloud)
+# Terragrunt infrastructure for Yandex Cloud
 
-Этот репозиторий содержит описание инфраструктуры в **Yandex Cloud**, управляемой с помощью **Terragrunt** поверх **Terraform**.
-Проект поддерживает несколько окружений (`prod`, `stage`) и использует переиспользуемые Terraform-модули, хранящиеся в отдельном репозитории.
+Каталог содержит Terragrunt-конфигурации для развёртывания инфраструктуры в Yandex Cloud и генерации inventory для Ansible.
 
-## Используемые технологии
+## Что здесь есть
 
-* **Terraform**
-* **Terragrunt**
-* **Yandex Cloud**
-* **S3 backend (Yandex Object Storage)**
-* **Ansible (генерация inventory)**
+* `root.hcl` с общими `locals`, backend и provider generation
+* окружения `prod` и `stage`
+* отдельные модули для `vpc`, `monitoring`, `blackbox` и `inventory`
 
-## Структура репозитория
+## Структура
 
 ```text
-.
-├── prod
-│   ├── blackbox        # Инстанс Blackbox Exporter
-│   ├── inventory       # Генерация Ansible inventory
-│   ├── monitoring      # Инстанс мониторинга (Prometheus, Grafana, Alertmanager)
-│   └── vpc             # Сеть и подсеть
-├── stage
-│   ├── blackbox
-│   ├── inventory
-│   └── vpc
-└── root.hcl            # Общая конфигурация Terragrunt
+terraform/
+├── root.hcl
+├── prod/
+│   ├── blackbox/
+│   ├── inventory/
+│   ├── monitoring/
+│   └── vpc/
+└── stage/
+    ├── blackbox/
+    ├── inventory/
+    └── vpc/
 ```
 
-### Логика структуры
+## За что отвечает Terraform
 
-* **Каждое окружение** (`prod`, `stage`) изолировано
-* **Каждый компонент** (VPC, instance, inventory) — отдельный Terragrunt-модуль
-* Общие настройки вынесены в `root.hcl`
-* Состояние Terraform хранится **централизованно в S3**
----
+* создание VPC и подсети
+* создание VM через внешний модуль `yc-instance`
+* передача IP-адресов в модуль `ansible-inventory`
+* подготовка DNS-записей через `dns_records`
+* хранение state в Yandex Object Storage
 
-## Окружения
+## Используемые модули
 
-### `stage`
+Источник модулей:
 
-* Тестовое окружение
-* Возможен запуск нескольких инстансов (`count`)
-* Используется для проверки изменений
-
-### `prod`
-
-* Боёвое окружение
-* Отдельные инстансы под конкретные роли
-* Полный набор сервисов мониторинга
-
-## Используемые Terraform-модули
-
-Все модули подключаются из репозитория:
-
-```
+```text
 https://github.com/vladoz77/terraform-modules
 ```
 
-Используемые модули:
+Используются:
 
-| Модуль              | Назначение                  |
-| ------------------- | --------------------------- |
-| `yc-network`        | Создание VPC и подсети      |
-| `yc-instance`       | ВМ в Yandex Cloud           |
-| `ansible-inventory` | Генерация Ansible inventory |
+* `yc-network`
+* `yc-instance`
+* `ansible-inventory`
 
-## Зависимости между модулями
+## Зависимости
 
-Terragrunt `dependency` используется для передачи данных между модулями:
+* `blackbox` и `monitoring` зависят от `vpc`
+* `inventory` зависит от IP-адресов созданных инстансов
+* для `plan`, `validate` и `init` используются `mock_outputs`
 
-* `instance` зависит от `vpc` (subnet_id)
-* `inventory` зависит от `blackbox` и `monitoring` (public_ips)
+## Remote state
 
-Для команд `plan`, `init`, `validate` используются `mock_outputs`, чтобы:
+Remote state настраивается в [`terraform/root.hcl`](/home/vlad/blackbox-exporter-terraform/terraform/root.hcl):
 
-* не поднимать реальные ресурсы
-* избежать циклических зависимостей
+* backend `s3`
+* endpoint `https://storage.yandexcloud.net`
+* ключ формируется из `path_relative_to_include()`
 
-## Remote State
+## Переменные окружения
 
-Состояние Terraform хранится в **Yandex Object Storage**:
-
-* backend: `s3`
-* ключ формируется автоматически:
-
-  ```text
-  instances/<env>/<module>/blackbox.tfstate
-  ```
-
-Все настройки backend’а централизованы в `root.hcl`.
-
-## Общая конфигурация (`root.hcl`)
-
-В `root.hcl` описаны:
-
-* backend Terraform
-* provider Yandex Cloud
-* общие `locals`
-* общие `inputs` для всех модулей
-
-### Переменные берутся из окружения
-
-Перед работой необходимо экспортировать:
+Перед запуском Terragrunt должны быть заданы:
 
 ```bash
 export TF_VAR_iam_token=***
@@ -112,52 +73,22 @@ export ACCESS_KEY=***
 export SECRET_KEY=***
 ```
 
-## Как работать с проектом
-
-### Инициализация
-
-```bash
-terragrunt init
-```
-
-### План
-
-```bash
-terragrunt plan
-```
-
-### Применение
-
-```bash
-terragrunt apply
-```
-
-### Запуск всего окружения
+## Запуск
 
 Из каталога окружения:
 
 ```bash
-cd prod
+cd terraform/prod
 terragrunt run --all init
+terragrunt run --all plan
+terragrunt run --all apply
 ```
 
-## DNS
+Для `stage` команды те же, только из `terraform/stage`.
 
-* DNS-записи создаются автоматически
-* Используется зона: `home-local-zone`
-* Записи описываются в `dns_records` каждого модуля
+## Inventory для Ansible
 
-## Ansible inventory
+Модуль `inventory` записывает результат в `ansible/inventories`:
 
-Модуль `ansible-inventory`:
-
-* собирает public IP инстансов
-* генерирует inventory-файлы
-* раскладывает их в:
-
-  ```text
-  ansible/inventories/<environment>
-  ```
-
-
-
+* `prod` создаёт группы `monitoring-server` и `blackbox-server`
+* `stage` создаёт группу `monitoring-blackbox-server`

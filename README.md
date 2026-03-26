@@ -1,199 +1,96 @@
 # Infrastructure as Code: Terraform + Ansible
 
-Этот репозиторий содержит полный цикл управления инфраструктурой и сервисами:
+Репозиторий объединяет два слоя автоматизации:
 
-* **Terraform + Terragrunt** — создание инфраструктуры (VPC, VM, inventory)
-* **Ansible** — конфигурация серверов и запуск сервисов
-* Поддержка **stage / prod** окружений
-* Мониторинг, Blackbox Exporter, Traefik, Docker
+* `terraform/` поднимает инфраструктуру в Yandex Cloud через Terragrunt
+* `ansible/` настраивает хосты и разворачивает сервисы
 
-Проект следует принципам **Infrastructure as Code** и **Immutable-ish infrastructure**:
+В текущем виде проект покрывает:
 
-* Terraform отвечает за *что создать*
-* Ansible — *как это настроить*
+* окружения `stage` и `prod`
+* monitoring-стек на базе VictoriaMetrics, VMAlert, Alertmanager и Grafana
+* Blackbox Exporter
+* Traefik как edge reverse proxy
+* Grafana Alloy для сбора и отправки telemetry
 
-## Общая архитектура
-
-```text
-Terraform (Terragrunt)
-        ↓
-  VM / Network / Inventory
-        ↓
-     Ansible
-        ↓
- Docker / Monitoring / Traefik / Blackbox
-```
-## Структура репозитория
+## Структура
 
 ```text
 .
-├── terraform/          # Инфраструктура (Terragrunt)
-├── ansible/            # Конфигурация и сервисы
-└── README.md           # Этот файл
+├── terraform/   # Инфраструктура и генерация inventory
+├── ansible/     # Playbook'и, inventories и роли
+└── README.md
+```
+
+## Как устроен поток
+
+```text
+Terragrunt/Terraform
+        ↓
+  VPC / VM / DNS / inventory
+        ↓
+      Ansible
+        ↓
+ common / docker / monitoring / traefik / alloy / blackbox
 ```
 
 ## Окружения
 
-Поддерживаются отдельные окружения:
+* `prod`:
+  * отдельный monitoring-сервер
+  * отдельный blackbox-сервер
+* `stage`:
+  * monitoring, blackbox, traefik и alloy запускаются на одном сервере
 
-* `stage` — тестовое / sandbox
-* `prod` — production
+## Terraform
 
-Разделение реализовано **и в Terraform, и в Ansible**.
+Каталог [`terraform/Readme.md`](/home/vlad/blackbox-exporter-terraform/terraform/Readme.md) описывает структуру Terragrunt-окружений и зависимости между модулями.
 
-## Terraform / Terragrunt
+Сейчас Terraform-часть отвечает за:
 
-Каталог: `terraform/`
+* VPC и подсеть
+* VM для `monitoring` и `blackbox`
+* DNS records через входы модулей
+* генерацию Ansible inventory в `ansible/inventories`
+* remote state в Yandex Object Storage
 
-```text
-terraform/
-├── root.hcl            # Общие настройки Terragrunt
-├── stage/
-│   ├── vpc/
-│   ├── inventory/
-│   └── blackbox/
-└── prod/
-    ├── vpc/
-    ├── inventory/
-    ├── monitoring/
-    └── blackbox/
-```
-
-### Что делает Terraform
-
-* Создаёт VPC и сети
-* Создаёт VM для:
-
-  * monitoring
-  * blackbox
-* Формирует inventory (используется Ansible)
-* Управляет state через S3 (Terragrunt)
-
-Подробнее см. `terraform/Readme.md`
-
-## Ansible
-
-Каталог: `ansible/`
-
-```text
-ansible/
-├── inventories/        # Inventory по окружениям
-├── roles/              # Роли
-├── blackbox-prod.yaml  # Playbook prod
-├── blackbox-stage.yaml # Playbook stage
-└── Readme.md
-```
-
-## Ansible Roles
-
-### `common`
-
-Базовая подготовка сервера:
-
-* системные пакеты
-* базовые настройки
-
-### `docker`
-
-* Установка Docker
-* Docker Compose v2
-* Создание Docker network
-
-### `traefik`
-
-* Traefik v3 (Docker)
-* HTTPS (Let’s Encrypt)
-* staging / prod ACME
-* Синхронизация `acme.json` с S3
-* (опционально) Dashboard
-
-### `monitoring`
-
-Полноценный monitoring stack:
-
-* VictoriaMetrics
-* Alertmanager
-* vmalert
-* Grafana
-* Dashboards и rules
-
-### `blackbox-exporter`
-
-* Blackbox Exporter в Docker
-* Генерация scrape-конфигурации
-* Интеграция с monitoring
-
-## Playbooks
-
-### Production
-
-```yaml
-blackbox-prod.yaml
-```
-
-Логика:
-
-1. Все сервера:
-
-   * `common`
-   * `docker`
-2. Monitoring сервер:
-
-   * `monitoring`
-   * `traefik`
-3. Blackbox сервер:
-
-   * `blackbox-exporter`
-   * `traefik`
-
-### Stage
-
-```yaml
-blackbox-stage.yaml
-```
-
-Stage-окружение совмещает роли:
-
-* monitoring
-* blackbox
-* traefik
-  на одном сервере.
-
----
-
-##  Как пользоваться
-
-### Создать инфраструктуру
+Быстрый старт:
 
 ```bash
-cd terraform/prod/
+cd terraform/prod
 terragrunt run --all init
+terragrunt run --all plan
 terragrunt run --all apply
 ```
 
----
+## Ansible
 
-### Применить Ansible
+Каталог [`ansible/Readme.md`](/home/vlad/blackbox-exporter-terraform/ansible/Readme.md) содержит детали по playbook'ам, inventory и ролям.
+
+Основные playbook'и:
+
+* `ansible/blackbox-prod.yaml`
+* `ansible/blackbox-stage.yaml`
+
+Используемые роли:
+
+* `common`
+* `docker`
+* `monitoring`
+* `grafana-alloy`
+* `blackbox-exporter`
+* `traefik`
+
+Применение:
 
 ```bash
 cd ansible
 ansible-playbook -i inventories/prod/inventory.ini blackbox-prod.yaml
+ansible-playbook -i inventories/stage blackbox-stage.yaml
 ```
 
-Для stage:
+## Примечания
 
-```bash
-ansible-playbook -i inventories/stage/inventory.ini blackbox-stage.yaml
-```
-
-## Безопасность и best practices
-
-* HTTPS везде через Traefik
-* ACME сертификаты:
-
-  * staging для тестов
-  * production для prod
-* `acme.json` хранится в S3
-* Docker-сервисы не публикуются без `traefik.enable=true`
-* Разделение окружений на уровне каталогов
-
+* Terraform создаёт инфраструктуру и inventory, но не конфигурирует сервисы
+* Ansible не управляет облачными ресурсами, а настраивает уже созданные хосты
+* README внутри ролей описывают реальные defaults, шаблоны и поведение ролей на текущий момент

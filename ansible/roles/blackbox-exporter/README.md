@@ -1,126 +1,76 @@
 # Ansible Role: blackbox-exporter
 
-Ansible-роль для установки и запуска **Prometheus Blackbox Exporter** в Docker через `docker-compose`.
-Роль поддерживает TLS, Basic Auth (через Traefik) и автоматическую генерацию scrape-конфигурации для мониторинга (VictoriaMetrics / Prometheus).
-
-Роль идемпотентна: проверяет, запущен ли контейнер, и выполняет действия только при необходимости.
-
----
+Роль запускает Prometheus Blackbox Exporter в Docker и генерирует scrape-конфиг для monitoring-стека.
 
 ## Возможности
 
-* Установка **Blackbox Exporter** в Docker
-* Автоматическая генерация `docker-compose.yaml` из шаблона
-* Поддержка:
+* Docker Compose шаблон для контейнера
+* поддержка TLS и Basic Auth через Traefik labels
+* генерация scrape-конфига
+* копирование scrape-конфига на monitoring-хост
+* reload VictoriaMetrics через handler
+* идемпотентный пропуск установки, если контейнер уже работает
 
-  * TLS
-  * Basic Auth (через Traefik)
-* Автоматическая генерация scrape-конфига для мониторинга
-* Копирование scrape-конфига на указанный monitoring-сервер
-* Hot-reload VictoriaMetrics после обновления scrape-конфига
-* Проверка состояния контейнера и идемпотентный запуск
-
----
-
-## Структура роли
+## Структура
 
 ```text
 blackbox-exporter/
-├── defaults
-│   └── main.yaml              # Переменные по умолчанию
-├── files
-│   └── blackbox.yaml          # Конфиг Blackbox Exporter
-├── handlers
-│   └── main.yaml              # Reload VictoriaMetrics
-├── tasks
-│   ├── generate-password-hash.yaml # Генерация bcrypt пароля для Traefik
-│   ├── install.yaml           # Установка и запуск контейнера
-│   └── main.yaml              # Проверка состояния контейнера
-└── templates
-    ├── docker-compose.yaml.j2 # Docker Compose
-    └── blackbox-scrape-config.yaml.j2 # Scrape config
+├── defaults/
+│   └── main.yaml
+├── files/
+│   └── blackbox.yaml
+├── handlers/
+│   └── main.yaml
+├── tasks/
+│   ├── generate-password-hash.yaml
+│   ├── install.yaml
+│   └── main.yaml
+├── templates/
+│   ├── blackbox-scrape-config.yaml.j2
+│   └── docker-compose.yaml.j2
+└── README.md
 ```
-
----
 
 ## Требования
 
 * Docker
 * Docker Compose v2
-* Ansible collection: `community.docker`
-* Traefik (опционально для TLS и Basic Auth)
-* VictoriaMetrics / Prometheus с поддержкой `/-/reload`
+* collection `community.docker`
+* monitoring-хост с VictoriaMetrics, если нужен scrape config reload
 
----
+## Переменные
 
-## Переменные роли
+| Переменная | Описание | По умолчанию |
+| --- | --- | --- |
+| `docker_network_name` | Docker network | `""` |
+| `blackbox_exporter_docker_dir` | Рабочий каталог compose | `/home/{{ username }}/{{ blackbox_exporter_container_name }}` |
+| `blackbox_exporter_repository` | Образ | `prom/blackbox-exporter` |
+| `blackbox_exporter_config_path` | Путь к конфигу в контейнере | `/etc/blackbox-exporter/blackbox.yaml` |
+| `blackbox_exporter_version` | Версия | `0.28.0` |
+| `blackbox_exporter_container_name` | Имя контейнера | `blackbox_exporter` |
+| `blackbox_exporter_port` | Порт | `9115` |
+| `blackbox_exporter_restart_policy` | Restart policy | `unless-stopped` |
+| `blackbox_exporter_url` | Hostname для Traefik | `blackbox.home.local` |
+| `blackbox_tls_enabled` | Включить TLS labels | `false` |
+| `blackbox_exporter_basic_auth_enabled` | Включить Basic Auth | `false` |
+| `blackbox_exporter_basic_auth_username` | Пользователь | `admin` |
+| `blackbox_exporter_basic_auth_password` | Пароль | `admin` |
+| `blackbox_scrape_config_dir` | Каталог scrape-конфига на monitoring-хосте | `""` |
+| `monitoring_server_groups` | Имя inventory-группы monitoring | `""` |
 
-### Основные
+## Логика работы
 
-| Переменная                              | Описание                             | По умолчанию                                 |
-| --------------------------------------- | ------------------------------------ | -------------------------------------------- |
-| `blackbox_exporter_container_name`      | Имя Docker-контейнера                | `blackbox_exporter`                          |
-| `blackbox_exporter_version`             | Версия Blackbox Exporter             | `0.28.0`                                     |
-| `blackbox_exporter_port`                | Порт сервиса                         | `9115`                                       |
-| `blackbox_exporter_repository`          | Docker-образ                         | `prom/blackbox-exporter`                     |
-| `blackbox_exporter_docker_dir`          | Каталог с docker-compose             | `/home/{{ ansible_user }}/blackbox_exporter` |
-| `blackbox_exporter_config_path`         | Путь к конфигу внутри контейнера     | `/etc/blackbox-exporter/blackbox.yaml`       |
-| `docker_network_name`                   | Docker network                       | "" (по умолчанию default)                    |
-| `blackbox_exporter_restart_policy`      | Политика рестарта контейнера         | `unless-stopped`                             |
-| `blackbox_exporter_url`                 | DNS / URL для Traefik                | `blackbox.home.local`                        |
-| `blackbox_tls_enabled`                  | Использовать TLS                     | `false`                                      |
-| `blackbox_exporter_basic_auth_enabled`  | Включить Basic Auth                  | `false`                                      |
-| `blackbox_exporter_basic_auth_username` | Пользователь для Basic Auth          | `admin`                                      |
-| `blackbox_exporter_basic_auth_password` | Пароль для Basic Auth                | `admin`                                      |
-| `blackbox_scrape_config_dir`            | Каталог для scrape-конфига           | ""                                           |
-| `monitoring_server_groups`              | Ansible группа с monitoring сервером | ""                                           |
+1. Роль проверяет, запущен ли контейнер `{{ blackbox_exporter_container_name }}`.
+2. Если контейнер уже работает, повторная установка пропускается.
+3. Если контейнера нет или он остановлен, выполняется `install.yaml`.
+4. В процессе установки также генерируется `blackbox-scrape-config.yaml`.
+5. После копирования scrape-конфига вызывается handler на reload VictoriaMetrics.
 
-> Если включен Basic Auth, пароль автоматически хешируется с использованием bcrypt для Traefik.
-
----
-
-## Handlers
-
-### Reload VictoriaMetrics
-
-Отправляет `POST` запрос на `/reload`:
+## Пример
 
 ```yaml
-- POST https://<victoriametrics>/-/reload
-```
-
-* Повторы: 10
-* Задержка: 5 секунд
-* Сертификаты TLS не проверяются (`validate_certs: false`)
-
-## Логика работы роли
-
-1. Проверяет, существует ли контейнер и запущен ли он
-2. Если контейнер **работает** — роль завершает выполнение
-3. Если контейнер **не существует или остановлен**:
-
-   * Создаёт каталог для docker-compose
-   * Копирует конфиг `blackbox.yaml`
-   * Генерирует `docker-compose.yaml` из шаблона
-   * Создаёт пароль для Basic Auth (при необходимости)
-   * Запускает контейнер через Docker Compose
-4. Генерирует scrape-конфиг `blackbox-scrape-config.yaml`
-5. Делегирует копирование scrape-конфига на monitoring-сервер
-6. Выполняет reload VictoriaMetrics
-
-
-## Пример использования
-
-```yaml
-- hosts: blackbox
+- hosts: blackbox-server
   become: true
-  vars:
-    docker_network_name: monitoring
-    blackbox_exporter_url: blackbox.example.com
-    blackbox_exporter_basic_auth_enabled: true
-    blackbox_exporter_basic_auth_password: supersecret
-    blackbox_scrape_config_dir: /etc/victoriametrics/scrape
-    monitoring_server_groups: monitoring
   roles:
     - role: blackbox-exporter
 ```

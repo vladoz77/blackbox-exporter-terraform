@@ -1,26 +1,24 @@
 # Ansible
 
-Этот каталог содержит Ansible-playbooks и роли для конфигурации серверов, развертывания сервисов и мониторинга поверх инфраструктуры, созданной Terraform.
+Каталог содержит playbook'и, inventory и роли для настройки серверов после Terraform.
 
-Ansible отвечает за:
+Ansible в этом проекте отвечает за:
 
-* установку базового ПО
-* Docker и Docker-сервисов
-* Traefik (reverse-proxy + TLS)
-* Monitoring stack
-* Blackbox Exporter
-
-Поддерживаются отдельные окружения **stage** и **prod**.
-
----
+* базовую подготовку хостов
+* установку Docker
+* развёртывание monitoring-стека
+* запуск Blackbox Exporter
+* настройку Traefik
+* установку Grafana Alloy
 
 ## Структура каталога
 
 ```text
 ansible/
-├── blackbox-prod.yaml        # Playbook для production
-├── blackbox-stage.yaml       # Playbook для stage
-├── inventories/              # Inventory по окружениям
+├── ansible.cfg
+├── blackbox-prod.yaml
+├── blackbox-stage.yaml
+├── inventories/
 │   ├── prod/
 │   │   ├── inventory.ini
 │   │   └── group_vars/
@@ -29,51 +27,38 @@ ansible/
 │   └── stage/
 │       └── group_vars/
 │           └── monitoring-blackbox-server.yaml
-├── roles/                    # Ansible roles
-└── Readme.md                 # Этот файл
+├── roles/
+│   ├── blackbox-exporter/
+│   ├── common/
+│   ├── docker/
+│   ├── grafana-alloy/
+│   ├── monitoring/
+│   └── traefik/
+└── Readme.md
 ```
-
----
 
 ## Окружения
 
-### Production (`prod`)
+### `prod`
 
-* Monitoring и Blackbox разнесены по разным серверам
-* Отдельные группы:
+* группа `monitoring-server` для monitoring + traefik
+* группа `blackbox-server` для blackbox + traefik
+* роль `grafana-alloy` применяется ко всем хостам
 
-  * `monitoring-server`
-  * `blackbox-server`
+### `stage`
 
-### Stage (`stage`)
+* используется группа `monitoring-blackbox-server`
+* роли `monitoring`, `blackbox-exporter`, `grafana-alloy` и `traefik` запускаются на одном сервере
 
-* Monitoring + Blackbox + Traefik запускаются **на одном сервере**
-* Используется группа:
-
-  * `monitoring-blackbox-server`
-
-## Playbooks
+## Playbook'и
 
 ### `blackbox-prod.yaml`
 
-Используется для **production-окружения**.
-
-Логика выполнения:
-
-1. **Все серверы**
-
-   * `common`
-   * `docker`
-
-2. **Monitoring сервер**
-
-   * `monitoring`
-   * `traefik`
-
-3. **Blackbox сервер**
-
-   * `blackbox-exporter`
-   * `traefik`
+```text
+all hosts            -> common, docker, grafana-alloy
+monitoring-server    -> monitoring, traefik
+blackbox-server      -> blackbox-exporter, traefik
+```
 
 Запуск:
 
@@ -83,15 +68,9 @@ ansible-playbook -i inventories/prod/inventory.ini blackbox-prod.yaml
 
 ### `blackbox-stage.yaml`
 
-Используется для **stage / test** окружения.
-
-Все сервисы разворачиваются на одном сервере:
-
-* `common`
-* `docker`
-* `monitoring`
-* `blackbox-exporter`
-* `traefik`
+```text
+monitoring-blackbox-server -> common, docker, monitoring, grafana-alloy, blackbox-exporter, traefik
+```
 
 Запуск:
 
@@ -99,77 +78,51 @@ ansible-playbook -i inventories/prod/inventory.ini blackbox-prod.yaml
 ansible-playbook -i inventories/stage blackbox-stage.yaml
 ```
 
-## Roles
+## Роли
 
 ### `common`
 
-Базовая подготовка сервера:
-
-* системные пакеты
-* общие настройки ОС
+* hostname
+* timezone
+* базовые пакеты
 
 ### `docker`
 
-* Установка Docker (Ubuntu / RHEL)
-* Docker Compose v2
-* Добавление пользователя в группу `docker`
-* Создание Docker network
-
-### `traefik`
-
-* Traefik v3 в Docker
-* HTTPS через Let’s Encrypt
-* staging / production ACME
-* Синхронизация `acme.json` с S3
-* (опционально) Dashboard с basic-auth
+* установка Docker Engine
+* Docker Compose plugin
+* подготовка docker network
 
 ### `monitoring`
 
-Полный monitoring stack:
-
 * VictoriaMetrics
+* VMAlert
 * Alertmanager
-* vmalert
 * Grafana
-* Dashboards и alert rules
+
+### `grafana-alloy`
+
+* установка бинарника Alloy
+* systemd unit
+* конфиг для remote_write и отправки логов
 
 ### `blackbox-exporter`
 
-* Blackbox Exporter в Docker
-* HTTP/HTTPS probes
-* Генерация scrape-конфига
-* Интеграция с monitoring
-* (опционально) basic-auth через Traefik
+* контейнер Blackbox Exporter
+* scrape config для monitoring
+* reload VictoriaMetrics после обновления scrape-конфига
 
-## Inventory и group_vars
+### `traefik`
 
-Все переменные окружений хранятся в `group_vars`.
+* reverse proxy в Docker
+* Let's Encrypt
+* синхронизация `acme.json` с S3-совместимым хранилищем
 
-Примеры:
+## Inventory
 
-* домены
-* credentials
-* S3 / ACME настройки
-* monitoring endpoints
+Inventory-файлы и `group_vars` генерируются Terraform-модулем `ansible-inventory` в каталог `ansible/inventories`.
 
-Это позволяет:
+Вручную здесь обычно редактируются только:
 
-* не хардкодить значения в ролях
-* переиспользовать роли между окружениями
-
-## Best practices
-
-* Роли **идемпотентны**
-* Docker-сервисы публикуются только через Traefik
-* TLS сертификаты сохраняются в S3
-* Stage и prod изолированы логически
-* Ansible **не создаёт инфраструктуру** (это делает Terraform)
-
-## Типичный workflow
-
-1. Terraform создаёт инфраструктуру
-2. Формируется inventory
-3. Ansible настраивает серверы
-4. Traefik поднимает HTTPS
-5. Monitoring начинает собирать метрики
-
+* значения переменных окружения
+* секреты и домены
+* настройки ролей в `group_vars`
