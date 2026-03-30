@@ -1,15 +1,24 @@
 services:
-  blackbox:
+  {{ blackbox_exporter_container_name }}:
     image: {{ blackbox_exporter_repository }}:v{{ blackbox_exporter_version }}
     container_name: {{ blackbox_exporter_container_name }}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.blackbox.rule=Host(`{{ blackbox_exporter_url }}`)"
-      - "traefik.http.routers.blackbox.entrypoints=websecure"
-      - "traefik.http.routers.blackbox.tls.certresolver=le"
-      - "traefik.http.services.blackbox.loadbalancer.server.port={{ blackbox_exporter_port }}"
+      # HTTP router for blackbox exporter
+      - "traefik.http.routers.{{ blackbox_exporter_container_name }}.rule=Host(`{{ blackbox_exporter_url }}`)"
+      - "traefik.http.routers.{{ blackbox_exporter_container_name }}.entrypoints=web"
+      - "traefik.http.routers.{{ blackbox_exporter_container_name }}.middlewares=redirect-to-https"
+      # HTTPS router for blackbox exporter
+      - "traefik.http.routers.{{ blackbox_exporter_container_name }}-secure.rule=Host(`{{ blackbox_exporter_url }}`)"
+      - "traefik.http.routers.{{ blackbox_exporter_container_name }}-secure.entrypoints=websecure"
+      - "traefik.http.routers.{{ blackbox_exporter_container_name }}-secure.tls.certresolver=le"
+      # Sercice definition for blackbox exporter
+      - "traefik.http.services.{{ blackbox_exporter_container_name }}.loadbalancer.server.port={{ blackbox_exporter_port }}"
+      # redirect middleware
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      # Authentication middleware (if enabled)
       {% if blackbox_exporter_basic_auth_enabled -%}
-      - "traefik.http.routers.blackbox.middlewares=blackbox-auth"
+      - "traefik.http.routers.{{ blackbox_exporter_container_name }}-secure.middlewares=blackbox-auth"
       - "traefik.http.middlewares.blackbox-auth.basicauth.users={{ blackbox_exporter_basic_auth_username }}:{{ blackbox_exporter_basic_auth_password_hash }}"
       {%- endif %}
 

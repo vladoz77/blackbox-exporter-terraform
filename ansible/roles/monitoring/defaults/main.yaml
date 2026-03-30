@@ -1,6 +1,7 @@
 # default/main.yaml
 # network name used in docker-compose (can be overridden)
 docker_network_name: "monitoring_network"
+username: "{{ ansible_user }}"
 
 # victoriametrics
 victoriametrics_enable: true

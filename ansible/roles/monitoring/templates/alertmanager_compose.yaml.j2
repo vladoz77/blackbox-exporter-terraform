@@ -5,11 +5,13 @@ services:
         restart: unless-stopped
         labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.{{ alertmanager_container_name }}.rule=Host(`{{ alertmanager_url }}`)"
-        - "traefik.http.routers.{{ alertmanager_container_name }}.entrypoints=websecure"
-        - "traefik.http.routers.{{ alertmanager_container_name }}.tls.certresolver=le"
+        # https router for alertmanager
+        - "traefik.http.routers.{{ alertmanager_container_name }}-secure.rule=Host(`{{ alertmanager_url }}`)"
+        - "traefik.http.routers.{{ alertmanager_container_name }}-secure.entrypoints=websecure"
+        - "traefik.http.routers.{{ alertmanager_container_name }}-secure.tls.certresolver=le"
+        - "traefik.http.routers.{{ alertmanager_container_name }}-secure.service={{ alertmanager_container_name }}"
+        # Service definition for alertmanager
         - "traefik.http.services.{{ alertmanager_container_name }}.loadbalancer.server.port={{ alertmanager_port }}"
-        - "traefik.http.routers.{{ alertmanager_container_name }}.service={{ alertmanager_container_name }}" 
         command:
         - "--config.file=/etc/alertmanager.yaml"
         ports:

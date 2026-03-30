@@ -5,11 +5,13 @@ services:
         restart: unless-stopped
         labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.{{ victoriametrics_container_name }}.rule=Host(`{{ victoriametrics_url }}`)"
-        - "traefik.http.routers.{{ victoriametrics_container_name }}.entrypoints=websecure"
-        - "traefik.http.routers.{{ victoriametrics_container_name }}.tls.certresolver=le"
-        - "traefik.http.services.{{ victoriametrics_container_name }}.loadbalancer.server.port={{ victoriametrics_port}}"
-        - "traefik.http.routers.{{ victoriametrics_container_name }}.service={{ victoriametrics_container_name }}" 
+        # https router for victoriametrics
+        - "traefik.http.routers.{{ victoriametrics_container_name }}-secure.rule=Host(`{{ victoriametrics_url }}`)"
+        - "traefik.http.routers.{{ victoriametrics_container_name }}-secure.entrypoints=websecure"
+        - "traefik.http.routers.{{ victoriametrics_container_name }}-secure.tls.certresolver=le"
+        - "traefik.http.routers.{{ victoriametrics_container_name }}-secure.service={{ victoriametrics_container_name }}"
+        # Service definition for victoriametrics
+        - "traefik.http.services.{{ victoriametrics_container_name }}.loadbalancer.server.port={{ victoriametrics_port }}"
         command:
         - "--storageDataPath=/storage"
         - "--retentionPeriod=30d"

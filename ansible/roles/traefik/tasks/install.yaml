@@ -15,12 +15,6 @@
     fail_msg: "aws_access_key/aws_secret_key must be set to download ACME from S3"
   when: traefik_acme_sync_to_s3
 
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: yes
-    force_apt_get: yes
-    cache_valid_time: 3600
-
 - name: Install packages
   ansible.builtin.apt:
     name: "{{ traefik_dependencies }}"
@@ -30,8 +24,8 @@
 - name: Create folder traefik
   ansible.builtin.file:
     path: "{{ traefik_docker_dir }}"
-    group: "{{ ansible_user }}"
-    owner: "{{ ansible_user }}"
+    group: "{{ username }}"
+    owner: "{{ username }}"
     state: directory
 
 - name: Determine ACME file and S3 key
@@ -39,12 +33,19 @@
     acme_local_file: "{{ traefik_acme_file_staging if traefik_acme_staging else traefik_acme_file_prod }}"
     acme_s3_key: "{{ s3_key_staging if traefik_acme_staging else s3_key_prod }}"
 
+- name: Show selected ACME mode
+  ansible.builtin.debug:
+    msg:
+      - "Traefik ACME mode: {{ 'staging' if traefik_acme_staging else 'production' }}"
+      - "Local ACME file: {{ acme_local_file }}"
+      - "S3 ACME key: {{ acme_s3_key }}"
+
 - name: Ensure letsencrypt directory exists
   ansible.builtin.file:
     path: "{{ traefik_letsencrypt_path }}"
     state: directory
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
 
 - name: check if acme.json exist
   ansible.builtin.stat:
@@ -84,8 +85,8 @@
     path: "{{ acme_local_file }}"
     state: touch
     mode: '0600'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
   when: 
    - not local_acme.stat.exists 
    - s3_acme_info.error is defined or not traefik_acme_sync_to_s3
@@ -94,15 +95,16 @@
   ansible.builtin.file:
     path: "{{ acme_local_file }}"
     mode: '0600'
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
 
 - name: Copy template to traefik folder
   ansible.builtin.template:
     src: "templates/docker-compose-traefik.yaml.j2"
     dest: "{{ traefik_docker_dir }}/docker-compose.yaml"
-    group: "{{ ansible_user }}"
-    owner: "{{ ansible_user }}"
+    group: "{{ username }}"
+    owner: "{{ username }}"
+    validate: "docker compose -f %s config -q"
 
 - name: start traefik
   community.docker.docker_compose_v2:

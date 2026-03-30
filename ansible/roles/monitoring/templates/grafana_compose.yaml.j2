@@ -4,12 +4,14 @@ services:
     image: {{ grafana_image }}
     restart: unless-stopped
     labels:
-    - "traefik.enable=true"
-    - "traefik.http.routers.{{ grafana_container_name }}.rule=Host(`{{ grafana_url }}`)"
-    - "traefik.http.routers.{{ grafana_container_name }}.entrypoints=websecure"
-    - "traefik.http.routers.{{ grafana_container_name }}.tls.certresolver=le"
-    - "traefik.http.services.{{ grafana_container_name }}.loadbalancer.server.port={{ grafana_port }}"
-    - "traefik.http.routers.{{ grafana_container_name }}.service={{ grafana_container_name }}" 
+        - "traefik.enable=true"
+        # https router for grafana
+        - "traefik.http.routers.{{ grafana_container_name }}-secure.rule=Host(`{{ grafana_url }}`)"
+        - "traefik.http.routers.{{ grafana_container_name }}-secure.entrypoints=websecure"
+        - "traefik.http.routers.{{ grafana_container_name }}-secure.tls.certresolver=le"
+        - "traefik.http.routers.{{ grafana_container_name }}-secure.service={{ grafana_container_name }}"
+        # Service definition for grafana
+        - "traefik.http.services.{{ grafana_container_name }}.loadbalancer.server.port={{ grafana_port }}"
     volumes:
     - "{{ grafana_data }}:/var/lib/grafana"
     - "{{ grafana_datasource_config }}:/etc/grafana/provisioning/datasources/datasources.yaml"

@@ -13,28 +13,13 @@
     acme_local_file: "{{ traefik_acme_file_staging if traefik_acme_staging else traefik_acme_file_prod }}"
     acme_s3_key: "{{ s3_key_staging if traefik_acme_staging else s3_key_prod }}"
 
-- name: Ensure acme.json exists locally
-  ansible.builtin.stat:
-    path: "{{ acme_local_file }}"
-  register: local_acme
-
-- name: Skip sync when acme.json is not created yet
-  ansible.builtin.debug:
-    msg: "Skip ACME sync: {{ acme_local_file }} does not exist yet"
-  when: not local_acme.stat.exists
-
-- name: Refresh acme.json status before upload
+- name: Wait until ACME file is non-empty
   ansible.builtin.stat:
     path: "{{ acme_local_file }}"
   register: acme_stat
-  when: local_acme.stat.exists
-
-- name: Skip sync when acme.json is still empty
-  ansible.builtin.debug:
-    msg: "Skip ACME sync: {{ acme_local_file }} is still empty and Traefik has not issued a certificate yet"
-  when:
-    - local_acme.stat.exists
-    - acme_stat.stat.size | int == 0
+  until: acme_stat.stat.size | int > 0
+  retries: 10
+  delay: 3
 
 - name: Upload acme.json to S3 (always overwrite)
   amazon.aws.s3_object:
@@ -49,13 +34,7 @@
     overwrite: always
     encrypt: false
     permission: []
-  when:
-    - local_acme.stat.exists
-    - acme_stat.stat.size | int > 0
 
 - name: Success message
   ansible.builtin.debug:
     msg: "{{ acme_s3_key }} successfully synced to s3://{{ s3_bucket_name }}/{{ acme_s3_key }}"
-  when:
-    - local_acme.stat.exists
-    - acme_stat.stat.size | int > 0

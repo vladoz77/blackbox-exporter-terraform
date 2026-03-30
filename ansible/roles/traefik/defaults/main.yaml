@@ -1,5 +1,6 @@
 # default/main.yaml
 # Install common packages for role
+username: "{{ ansible_user }}"
 traefik_dependencies:
   - python3-pip
   - python3-boto3
@@ -11,6 +12,8 @@ traefik_container_name: traefik
 traefik_image: "traefik"
 traefik_version: "v3.6"
 traefik_docker_dir: "/home/{{ ansible_user }}/{{ traefik_container_name }}"
+traefik_log_level: "DEBUG"
+traefik_log_format: "json"
 
 # Dashboard config
 traefik_enable_dashboard: false

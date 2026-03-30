@@ -5,11 +5,13 @@ services:
         restart: unless-stopped
         labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.{{ vmalert_container_name }}.rule=Host(`{{ vmalert_url }}`)"
-        - "traefik.http.routers.{{ vmalert_container_name }}.entrypoints=websecure"
-        - "traefik.http.routers.{{ vmalert_container_name }}.tls.certresolver=le"
+        # https router for vmalert
+        - "traefik.http.routers.{{ vmalert_container_name }}-secure.rule=Host(`{{ vmalert_url }}`)"
+        - "traefik.http.routers.{{ vmalert_container_name }}-secure.entrypoints=websecure"
+        - "traefik.http.routers.{{ vmalert_container_name }}-secure.tls.certresolver=le"
+        - "traefik.http.routers.{{ vmalert_container_name }}-secure.service={{ vmalert_container_name }}"
+        # Service definition for vmalert
         - "traefik.http.services.{{ vmalert_container_name }}.loadbalancer.server.port={{ vmalert_port }}"
-        - "traefik.http.routers.{{ vmalert_container_name }}.service={{ vmalert_container_name }}" 
         command:
         - "--remoteRead.url=http://{{ victoriametrics_container_name }}:{{ victoriametrics_port }}"
         - "--datasource.url=http://{{ victoriametrics_container_name }}:{{ victoriametrics_port }}"
