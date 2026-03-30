@@ -4,7 +4,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::https://github.com/vladoz77/terraform-modules.git//yc-instance?ref=main"
+  source = "git::https://github.com/vladoz77/terraform-modules.git//yc-instance?ref=nat-static-ipaddress"
 }
 
 dependency "vpc" {
@@ -12,6 +12,7 @@ dependency "vpc" {
 
   mock_outputs = {
     subnet_id = "mock-vpc-subnet_id"
+    static_external_ipv4_address = "mock-static_external_ipv4_address"
   }
 }
 
@@ -30,6 +31,7 @@ inputs = {
       subnet_id      = dependency.vpc.outputs.subnet_id
       nat            = true
       security_group = []
+      nat_ip_address = dependency.vpc.outputs.static_external_ipv4_address
     }
   ]
   tags        = []
