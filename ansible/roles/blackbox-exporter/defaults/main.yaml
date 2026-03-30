@@ -1,6 +1,7 @@
 # defaults/main.yaml
 # Default variables for blackbox-exporter role
 docker_network_name: ""
+username: "{{ ansible_user }}"
 
 # Blackbox Exporter configuration
 blackbox_exporter_docker_dir: "/home/{{ username }}/{{ blackbox_exporter_container_name }}"

@@ -27,6 +27,7 @@
     dest: "{{ grafana_dir }}/dashboards.yaml"
     owner: "{{ username }}"
     group: "{{ username }}"
+    validate: 'python3 -c "import yaml; yaml.safe_load(open(\"%s\"))"'
     mode: "0644"
 
 - name: copy template datasources.yaml  to {{ grafana_dir }}
@@ -35,6 +36,7 @@
     dest: "{{ grafana_dir }}/datasources.yaml"
     owner: "{{ username }}"
     group: "{{ username }}"
+    validate: 'python3 -c "import yaml; yaml.safe_load(open(\"%s\"))"'
     mode: "0644"
 
 - name: Create Grafana docker-compose file
@@ -43,6 +45,7 @@
     dest: "{{ grafana_dir }}/docker-compose.yaml"
     owner: "{{ username }}"
     mode: "0644"
+    validate: "docker compose -f %s config -q"
   notify: restart grafana
 
 - name: Flush handlers

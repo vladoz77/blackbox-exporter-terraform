@@ -7,12 +7,13 @@ packages:
 - unzip
 
 # traefik config
-traefik_docker_dir: /home/{{ ansible_user }}/traefik
+traefik_docker_dir: /home/{{ username }}/traefik
 traefik_container_name: traefik
 traefik_image: "traefik"
 traefik_version: "v3.6"
 acme_email: "vladoz77@yandex.ru"
 traefik_acme_staging: true
+traefik_acme_sync_to_s3: false
 
 # VictoriaMetrics config
 victoriametrics_url: prometheus.home-local.site
@@ -31,6 +32,7 @@ monitoring_server_groups: monitoring-blackbox-server
 prometheus_url: prometheus.home-local.site
 loki_url: loki.home-local.site
 alloy_enable_docker: true
+alloy_skip_tls_verify: true
 alloy_groups:
 - adm
 - systemd-journal

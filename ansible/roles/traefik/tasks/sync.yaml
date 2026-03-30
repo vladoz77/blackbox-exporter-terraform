@@ -13,16 +13,6 @@
     acme_local_file: "{{ traefik_acme_file_staging if traefik_acme_staging else traefik_acme_file_prod }}"
     acme_s3_key: "{{ s3_key_staging if traefik_acme_staging else s3_key_prod }}"
 
-- name: Ensure acme.json exists locally
-  ansible.builtin.stat:
-    path: "{{ acme_local_file }}"
-  register: local_acme
-
-- name: Fail if acme.json not found locally
-  ansible.builtin.fail:
-    msg: "acme.json not found at {{ traefik_docker_dir }}/letsencrypt/acme.json — nothing to sync!"
-  when: not local_acme.stat.exists
-
 - name: Wait until ACME file is non-empty
   ansible.builtin.stat:
     path: "{{ acme_local_file }}"

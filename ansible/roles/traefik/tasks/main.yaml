@@ -14,7 +14,7 @@
     install.yaml
   when: not container_status.exists or not container_status.container.State.Running
 
-- name: sync asme file to s3
+- name: sync acme file to s3
   ansible.builtin.include_tasks:
     sync.yaml
-  when: traefik_acme_sync_to_s3 | default(true) | bool
+  when: traefik_acme_sync_to_s3
