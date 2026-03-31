@@ -63,6 +63,3 @@ generate "provider" {
     }
     EOF
 }
-
-
-

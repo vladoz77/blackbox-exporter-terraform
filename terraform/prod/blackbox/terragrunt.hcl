@@ -18,6 +18,8 @@ dependency "vpc" {
     subnet_id                    = "mock-vpc-subnet_id"
     static_external_ipv4_address = "mock-static_external_ipv4_address"
   }
+
+  mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
 }
 
 inputs = merge(
