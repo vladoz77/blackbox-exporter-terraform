@@ -103,6 +103,7 @@ jobs:
       with:
           tg_dir: ${{ env.WORKING_DIR }}/${{ env.ENV_NAME }}
           tg_command: 'run --all destroy --non-interactive'
+          tg_add_approve: false
 
   ansible-provision:
     name: provision server
