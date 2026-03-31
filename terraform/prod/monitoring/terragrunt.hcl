@@ -1,6 +1,10 @@
-# prod/instance/terragrunt.hcl
-include "prod" {
+# prod/monitoring/terragrunt.hcl
+include "root" {
   path = find_in_parent_folders("root.hcl")
+}
+
+locals {
+  prod = read_terragrunt_config(find_in_parent_folders("prod.hcl"))
 }
 
 terraform {
@@ -13,48 +17,44 @@ dependency "vpc" {
   mock_outputs = {
     subnet_id = "mock-vpc-subnet_id"
   }
+
+  mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
 }
 
 
 
-inputs = {
-  name          = "monitoring"
-  cpu           = 2
-  core_fraction = 20
-  memory        = 2
-  boot_disk = {
-    type = "network-hdd"
-    size = 20
-  }
-  network_interfaces = [
-    {
-      subnet_id      = dependency.vpc.outputs.subnet_id
-      nat            = true
-      security_group = []
-    }
-  ]
-  tags        = []
-  environment = {}
-  dns_records = {
-    "prometheus" = {
-      name = "prometheus"
-      type = "A"
-      ttl  = 300
-    }
-    "grafana" = {
-      name = "grafana"
-      type = "A"
-      ttl  = 300
-    }
-    "alertmanager" = {
-      name = "alert"
-      type = "A"
-      ttl  = 300
-    }
-    "vmalert" = {
-      name = "vmalert"
-      type = "A"
-      ttl  = 300
+inputs = merge(
+  local.prod.inputs,
+  {
+    name = "${local.prod.locals.environment}-monitoring"
+    network_interfaces = [
+      {
+        subnet_id      = dependency.vpc.outputs.subnet_id
+        nat            = true
+        security_group = []
+      }
+    ]
+    dns_records = {
+      "prometheus" = {
+        name = "prometheus"
+        type = "A"
+        ttl  = 300
+      }
+      "grafana" = {
+        name = "grafana"
+        type = "A"
+        ttl  = 300
+      }
+      "alertmanager" = {
+        name = "alert"
+        type = "A"
+        ttl  = 300
+      }
+      "vmalert" = {
+        name = "vmalert"
+        type = "A"
+        ttl  = 300
+      }
     }
   }
-}
+)
