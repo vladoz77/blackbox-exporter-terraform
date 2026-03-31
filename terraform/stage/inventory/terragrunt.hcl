@@ -8,7 +8,7 @@ dependency "blackbox" {
   mock_outputs = {
     public_ips = ["10.0.0.1"]
   }
-  
+
   mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
 }
 
