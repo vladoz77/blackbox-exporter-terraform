@@ -3,18 +3,14 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
+locals {
+  prod = read_terragrunt_config(find_in_parent_folders("prod.hcl"))
+}
 
 terraform {
-  source = "git::https://github.com/vladoz77/terraform-modules.git//yc-network?ref=nat-static-ipaddress"
+  source = "git::https://github.com/vladoz77/terraform-modules.git//yc-network?ref=main"
 }
 
 
 
-inputs = {
-  ipv4_cidr    = ["192.168.10.0/24"]
-  network_name = "blackbox-network"
-  subnet_name  = "blackbox-subnet"
-  static_address = {
-    name = "blackbox-static-ip"
-  }
-}
+inputs = local.prod.inputs

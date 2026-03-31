@@ -38,6 +38,7 @@ inputs = {
   dns_zone_name     = local.dns_zone_name
   create_dns_record = local.create_dns_record
   platform_id       = local.platform_id
+  username          = local.username
 }
 
 generate "backend" {
