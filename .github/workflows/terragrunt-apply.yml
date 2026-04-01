@@ -76,7 +76,7 @@ jobs:
       run: |
         set -euo pipefail
         cd ${{ env.WORKING_DIR}}/${{ env.ENV_NAME }}
-        terragrunt run-all init --non-interactive
+        terragrunt run --all init --non-interactive
 
     - name: terragrunt apply
       env:
@@ -89,7 +89,7 @@ jobs:
       run: |
         set -euo pipefail
         cd ${{ env.WORKING_DIR}}/${{ env.ENV_NAME }}
-        terragrunt run-all apply --non-interactive
+        terragrunt run --all apply --non-interactive
 
     - name: Upload inventory file as artifact
       uses: actions/upload-artifact@v4
