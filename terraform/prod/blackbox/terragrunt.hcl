@@ -25,7 +25,9 @@ dependency "vpc" {
 inputs = merge(
   local.prod.inputs,
   {
-    name = "${local.prod.locals.environment}-blackbox"
+    name   = "${local.prod.locals.environment}-blackbox"
+    cpu    = 2
+    memory = 2
     network_interfaces = [
       {
         subnet_id      = dependency.vpc.outputs.subnet_id
