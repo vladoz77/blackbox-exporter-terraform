@@ -22,6 +22,16 @@ dependency "vpc" {
   mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
 }
 
+dependency "security_groups" {
+  config_path = "../security-groups"
+
+  mock_outputs = {
+    security_group = "mock-security_group_id"
+  }
+
+  mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
+}
+
 inputs = merge(
   local.prod.inputs,
   {
@@ -32,7 +42,7 @@ inputs = merge(
       {
         subnet_id      = dependency.vpc.outputs.subnet_id
         nat            = true
-        security_group = []
+        security_group = [dependency.security_groups.outputs.security_group_id]
         nat_ip_address = dependency.vpc.outputs.static_external_ipv4_address
       }
     ]
