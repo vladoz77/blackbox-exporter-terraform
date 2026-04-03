@@ -26,7 +26,7 @@ dependency "security_groups" {
   config_path = "../security-groups"
 
   mock_outputs = {
-    security_group = "mock-security_group_id"
+    security_group_id = "mock-security_group_id"
   }
 
   mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
